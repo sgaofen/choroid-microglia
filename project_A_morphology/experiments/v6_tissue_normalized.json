@@ -1,0 +1,38 @@
+{
+  "HET_1": {
+    "tissue_area_mm2": 0.42333336179222725,
+    "tissue_fraction_of_field": 0.9881044902943578,
+    "image_area_mm2": 0.42842975206611567,
+    "n_cells_cellpose_ext": 1848,
+    "cells_per_mm2_tissue": 4365.354037244533,
+    "cells_per_mm2_field": 4313.425925925926,
+    "signal_fraction_of_tissue": 0.07154962095780934,
+    "skeleton_length_per_mm2_tissue": 300904.7041809093,
+    "endpoints_per_mm2_tissue": 26201.573041729636,
+    "branchpoints_per_mm2_tissue": 31393.69867693715
+  },
+  "HET_3": {
+    "tissue_area_mm2": 0.4254492947886073,
+    "tissue_fraction_of_field": 0.9930432999502602,
+    "image_area_mm2": 0.42842975206611567,
+    "n_cells_cellpose_ext": 1772,
+    "cells_per_mm2_tissue": 4165.008666615495,
+    "cells_per_mm2_field": 4136.033950617284,
+    "signal_fraction_of_tissue": 0.06409201713155345,
+    "skeleton_length_per_mm2_tissue": 289127.2861578473,
+    "endpoints_per_mm2_tissue": 25434.288251380513,
+    "branchpoints_per_mm2_tissue": 27761.240045934315
+  },
+  "WT_2": {
+    "tissue_area_mm2": 0.4236837050064886,
+    "tissue_fraction_of_field": 0.9917396703662136,
+    "image_area_mm2": 0.4272126220886551,
+    "n_cells_cellpose_ext": 1800,
+    "cells_per_mm2_tissue": 4248.452274019916,
+    "cells_per_mm2_field": 4213.358657803103,
+    "signal_fraction_of_tissue": 0.08419639407176491,
+    "skeleton_length_per_mm2_tissue": 373195.84900622617,
+    "endpoints_per_mm2_tissue": 29349.72445968759,
+    "branchpoints_per_mm2_tissue": 40195.0790147551
+  }
+}
