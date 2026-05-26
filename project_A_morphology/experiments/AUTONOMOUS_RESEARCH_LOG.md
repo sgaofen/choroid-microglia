@@ -4,6 +4,38 @@ Stephen went to sleep around 2026-05-23 night. This log captures my work
 overnight with Codex. Each section is a self-contained finding so you can
 read in any order.
 
+## 2026-05-25 — methodology survey + direction reset
+
+Stepped back from algorithm tuning to check the literature (should have done
+this first). Findings:
+
+- **Field standard = Young & Morrison 2018** (binarize → skeletonize → ImageJ
+  AnalyzeSkeleton → endpoints/junctions/branch-length). Aggregate ROI readout,
+  no per-cell segmentation, zero ML. Reproduced faithfully in Python with
+  `skan` at `experiments/imagej_skeleton_baseline/`. Huixin confirmed ImageJ
+  already extracts this → she likely wants the aggregate paradigm.
+- Aggregate WT vs HET (density-normalized, per mm² signal): endpoints +8.8%,
+  junctions −8.2%, branch length −5.0%, mean branch len −1.9%. Same direction
+  as the v30f per-cell numbers (HET less ramified). n=1 WT vs 2 HET → underpowered.
+- Per-cell tools exist too (3DMorph MATLAB, MicrogliaMorphology) but all built
+  for sparse parenchymal / 3D; none handle dense 2D choroid-plexus whole-mount.
+  That density is the only genuine open gap, and the only place a model helps.
+- **Shipley 2020 (Huixin's own paper) has NO static morphology methods** — it's
+  a calcium-dynamics / motility study. No rubric to borrow.
+- **Key blind spot**: every skeleton-based method structurally misses amoeboid
+  (round, process-less) microglia — a degenerate skeleton. But amoeboid
+  shift IS the classic disease signal, so skeleton methods may miss exactly the
+  phenotype that matters. Argues for a soma-center detector (CNN heatmap, like
+  the pupa TinyUNet) that doesn't depend on processes; processes then come from
+  skeleton attribution, optionally + a learned endpoint head.
+
+**Blocker (Tue meeting with Huixin)**: confirm (1) aggregate avg vs per-cell
+0–5 distribution, (2) exact cell/process definition (ideally she hand-annotates
+~10 cells), (3) normalization. Until then, building detectors is premature.
+
+Infra: project moved from `~/Documents/choroid-microglia` to
+`~/choroid-microglia` (background bash can't read macOS-protected `~/Documents`).
+
 ## ⭐ Morning brief
 
 **Working version: v30f** (`experiments/v30f_trunk_gate/v30f_run.py`).
