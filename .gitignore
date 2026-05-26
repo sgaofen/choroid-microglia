@@ -28,6 +28,14 @@ project_A_morphology/experiments/v25_island_classify/v25_results.json
 project_A_morphology/experiments/cellpose_extended/all_cells_extended.json
 project_A_morphology/experiments/v30b_full_architecture/F_*_seeds_v30b.json
 project_A_morphology/experiments/v30a_minimal_filter/F_*_seeds_v30a.json
+# per-seed / per-cell serializations regenerate from the .py — keep only the
+# small summary metrics (young_morrison_metrics.json, skeleton_quality.json, etc.)
+F_*_seeds_v30*.json
+F_*_cells_v31.json
+F_*_trunk_metrics_v30*.json
+F_*_endpoint_counts_v30*.json
+F_*_small_cell_candidates_v30*.json
+F_*_combined_v30*.json
 
 # Python
 __pycache__/

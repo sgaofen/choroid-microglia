@@ -1,0 +1,53 @@
+[
+ {
+  "stem": "F_WT_2",
+  "n_skel": 172174,
+  "n_fg": 1445651,
+  "n_px": 10007712,
+  "skel_per_fg": 0.11909790122235588,
+  "skel_per_px": 0.017204132173267977,
+  "n_endpoints": 5352,
+  "endpoint_per_fg": 0.003702138344593543,
+  "n_junctions": 17846,
+  "n_branches": 5308,
+  "short_spur_frac": 0.003391107761868877,
+  "mean_branch_len": 15.860399397136398,
+  "fg_cov_within_2px": 0.5573343773843065,
+  "fg_cov_within_4px": 0.8441408057684738,
+  "fg_cov_within_8px": 0.9612914873645161
+ },
+ {
+  "stem": "F_HET_1",
+  "n_skel": 136725,
+  "n_fg": 1249747,
+  "n_px": 10036224,
+  "skel_per_fg": 0.10940214299374193,
+  "skel_per_px": 0.013623151496020815,
+  "n_endpoints": 5000,
+  "endpoint_per_fg": 0.004000809763896213,
+  "n_junctions": 13426,
+  "n_branches": 4933,
+  "short_spur_frac": 0.004054327995134806,
+  "mean_branch_len": 15.783093452260287,
+  "fg_cov_within_2px": 0.5171526717007522,
+  "fg_cov_within_4px": 0.8047684851413927,
+  "fg_cov_within_8px": 0.9406335842374497
+ },
+ {
+  "stem": "F_HET_3",
+  "n_skel": 149967,
+  "n_fg": 1283059,
+  "n_px": 10036224,
+  "skel_per_fg": 0.11688238810530147,
+  "skel_per_px": 0.014942572027089072,
+  "n_endpoints": 5163,
+  "endpoint_per_fg": 0.004023977073540656,
+  "n_junctions": 15199,
+  "n_branches": 5084,
+  "short_spur_frac": 0.002950432730133753,
+  "mean_branch_len": 16.12745869394178,
+  "fg_cov_within_2px": 0.5440264243499324,
+  "fg_cov_within_4px": 0.815354555012669,
+  "fg_cov_within_8px": 0.9443922687888866
+ }
+]

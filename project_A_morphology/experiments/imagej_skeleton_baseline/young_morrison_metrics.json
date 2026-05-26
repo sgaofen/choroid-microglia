@@ -1,0 +1,56 @@
+[
+ {
+  "stem": "F_WT_2",
+  "n_branches": 12638,
+  "n_endpoints": 5352,
+  "n_junctions": 17846,
+  "total_branch_len_um": 41281.8,
+  "mean_branch_len_um": 3.266,
+  "branch_type_counts": {
+   "2": 7115,
+   "1": 5375,
+   "3": 104,
+   "0": 44
+  },
+  "fg_area_mm2": 0.0617,
+  "endpoints_per_mm2": 86773.1,
+  "junctions_per_mm2": 289340.8,
+  "branch_len_um_per_mm2": 669309.7
+ },
+ {
+  "stem": "F_HET_1",
+  "n_branches": 10294,
+  "n_endpoints": 5000,
+  "n_junctions": 13426,
+  "total_branch_len_um": 32664.2,
+  "mean_branch_len_um": 3.173,
+  "branch_type_counts": {
+   "2": 5190,
+   "1": 4952,
+   "3": 85,
+   "0": 67
+  },
+  "fg_area_mm2": 0.0532,
+  "endpoints_per_mm2": 93977.1,
+  "junctions_per_mm2": 252347.3,
+  "branch_len_um_per_mm2": 613937.5
+ },
+ {
+  "stem": "F_HET_3",
+  "n_branches": 11090,
+  "n_endpoints": 5163,
+  "n_junctions": 15199,
+  "total_branch_len_um": 35868.8,
+  "mean_branch_len_um": 3.234,
+  "branch_type_counts": {
+   "2": 5823,
+   "1": 5095,
+   "3": 93,
+   "0": 79
+  },
+  "fg_area_mm2": 0.0545,
+  "endpoints_per_mm2": 94759.8,
+  "junctions_per_mm2": 278956.9,
+  "branch_len_um_per_mm2": 658323.8
+ }
+]
