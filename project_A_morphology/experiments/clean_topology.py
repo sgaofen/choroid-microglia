@@ -99,8 +99,14 @@ def merged_branches(sk, merge_radius=4):
     out = []
     for i in range(1, nn + 1):
         clust = (l == i)
-        ring = binary_dilation(clust, iterations=1) & sk & ~clust
-        _, n_exits = ndi.label(ring, structure=np.ones((3, 3)))
+        # exits = number of DISTINCT skeleton arms leaving the cluster. Remove
+        # the cluster, label the rest, count distinct components touching it.
+        # (Robust for tight junctions where arms are close — the old ring-
+        # component count merged close arms and missed real 3-way junctions.)
+        rest = sk & ~clust
+        rl, _ = ndi.label(rest, structure=np.ones((3, 3)))
+        touch = rl[binary_dilation(clust, iterations=1) & rest]
+        n_exits = len(np.unique(touch[touch > 0]))
         if n_exits >= 3:
             ys, xs = np.where(clust & sk)
             if len(ys):
