@@ -1,20 +1,20 @@
 """
-Topology annotator (BLANK start): mark CELL CENTER (中心) + BRANCH POINT (分叉点)
-+ ENDPOINT yourself, from scratch. Layers start EMPTY (unbiased ground truth).
-Reference only (look, don't edit): raw image + cyan skeleton.
+Topology annotator (blank): mark CELL CENTER (中心) + BRANCH POINT (分叉点)
++ ENDPOINT yourself, from scratch. Only the raw image is shown (no skeleton).
 
-Points are small so they don't cover the feature you're clicking; use the
-"point size" slider in the layer controls if you want them even smaller/bigger.
+CONTROLS
+  add a point      : pick a layer (左侧), click on the image
+  DELETE nearest   : RIGHT-CLICK near a point (in that layer)  <-- new
+  clear ALL points : press  c
+  move a point     : Select tool (arrow) -> drag
+  zoom / pan       : scroll = zoom ; hold SPACE + drag = pan (works while adding)
+  point size       : slider in layer controls (already tiny)
+  SAVE             : press  s
 
-SWITCH IMAGE = change the first argument:
-  ...annotate_topology.py F_WT_2          # whole image (default)
-  ...annotate_topology.py F_HET_1         # whole image
-  ...annotate_topology.py F_HET_3
-WHOLE image vs a REGION:
-  ...annotate_topology.py F_WT_2                 # WHOLE image
-  ...annotate_topology.py F_WT_2 1000 1000 600   # region: y0 x0 size
-
-SAVE: press  s   (writes *_topology_annotations.json next to this script).
+SWITCH IMAGE = first arg:  F_WT_2 | F_HET_1 | F_HET_3
+WHOLE vs REGION:
+  ...annotate_topology.py F_WT_2                 # whole image (default)
+  ...annotate_topology.py F_WT_2 1000 1000 600   # region y0 x0 size
 """
 import sys, json
 from pathlib import Path
@@ -25,7 +25,6 @@ import tifffile
 
 ROOT = Path('/Users/stephenyu/choroid-microglia/project_A_morphology')
 RAW = ROOT / 'data/raw'
-V29 = ROOT / 'experiments/v29_short_spur_audit'
 OUT = ROOT / 'experiments/annotation_tool'
 
 
@@ -53,23 +52,42 @@ def main():
 
     raw = tifffile.imread(find_raw(stem)).astype(np.float32)
     norm = normalize(raw)
-    skel = np.load(V29 / f'{stem}_skel_pruned.npy').astype(float)
     if not full:
         norm = norm[y0:y0 + sz, x0:x0 + sz]
-        skel = skel[y0:y0 + sz, x0:x0 + sz]
 
     v = napari.Viewer(title=f'topology {stem}' + ('' if full else f' [{y0},{x0}] {sz}'))
     v.add_image(norm, name='raw', colormap='gray', contrast_limits=(0, 1))
-    v.add_image(skel, name='skeleton (ref)', colormap='cyan',
-                blending='additive', opacity=0.55)
-    # EMPTY layers, SMALL points
+    # EMPTY layers, very small points
     p_end = v.add_points(np.empty((0, 2)), name='endpoint',
-                         face_color='yellow', size=4, border_width=0)
+                         face_color='yellow', size=3, border_width=0)
     p_br = v.add_points(np.empty((0, 2)), name='分叉点 branch',
-                        face_color='magenta', size=5, border_width=0)
+                        face_color='magenta', size=3, border_width=0)
     p_ctr = v.add_points(np.empty((0, 2)), name='中心 center',
-                         face_color='red', size=7, border_width=0)
+                         face_color='red', size=4, border_width=0)
     p_ctr.mode = 'add'
+
+    # right-click deletes the nearest point in that layer
+    def attach_rclick(layer):
+        def cb(lyr, event):
+            if event.button == 2 and len(lyr.data):
+                try:
+                    pos = np.asarray(lyr.world_to_data(event.position))[-2:]
+                except Exception:
+                    pos = np.asarray(event.position)[-2:]
+                data = np.asarray(lyr.data)[:, -2:]
+                d = np.linalg.norm(data - pos, axis=1)
+                i = int(np.argmin(d))
+                if d[i] < 30:
+                    lyr.data = np.delete(lyr.data, i, axis=0)
+        layer.mouse_drag_callbacks.append(cb)
+    for lyr in (p_ctr, p_br, p_end):
+        attach_rclick(lyr)
+
+    @v.bind_key('c')
+    def clear_all(viewer):
+        for lyr in (p_ctr, p_br, p_end):
+            lyr.data = np.empty((0, 2))
+        print('[cleared all points]')
 
     @v.bind_key('s')
     def save(viewer):
@@ -88,12 +106,9 @@ def main():
               f'branch={rec["counts"]["branch"]} endpoint={rec["counts"]["endpoint"]}')
 
     print('=' * 60)
-    print(f'TOPOLOGY  {stem}  {"WHOLE image" if full else f"region [{y0},{x0}] {sz}"}')
-    print('Layers start EMPTY. Pick a layer (中心/分叉点/endpoint), the')
-    print('"Add points" tool is on -> click image to drop a point.')
-    print('Select tool (arrow): click a point -> drag=move, Delete=remove.')
-    print('Point-size slider is in the layer controls if dots feel too big.')
-    print('Save: press  s')
+    print(f'TOPOLOGY {stem} {"WHOLE" if full else f"[{y0},{x0}] {sz}"} — blank, no skeleton')
+    print('add: pick layer + click | RIGHT-CLICK: delete nearest | c: clear all')
+    print('zoom=scroll, pan=space+drag, move=Select tool. Save: s')
     print('=' * 60)
     napari.run()
 
