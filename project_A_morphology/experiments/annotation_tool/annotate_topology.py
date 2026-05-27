@@ -1,17 +1,18 @@
 """
-Topology annotator (BUTTON version — robust, no reliance on shadowed hotkeys).
+Topology annotator — Q/W/E hotkeys (proven to work) + AUTO-SAVE (no data loss).
+Whole image by default (zoom in; nothing is cropped at the edges).
 
-Right-side panel has real buttons:
-  [Mark CENTER 中心] / [Mark BRANCH 分叉] / [Mark ENDPOINT]  -> pick what to add
-  [Undo last point]   -> remove the last point you added in the active layer
-  [Clear ALL]         -> wipe all points
-  [SAVE]              -> write JSON  (also auto-saves every change)
-Then just LEFT-CLICK on the image to drop a point of the chosen type.
-Hover a point + press 'd' (or right-click) also deletes the nearest point.
-Zoom = scroll,  pan = hold SPACE + drag.
+WORKFLOW
+  press  q  -> mark 中心 CENTER   (red)    then LEFT-CLICK on image
+  press  w  -> mark 分叉 BRANCH   (magenta)
+  press  e  -> mark ENDPOINT      (yellow)
+  press  d  -> delete the point nearest the cursor   (hover, then d)
+  zoom = scroll      pan = hold SPACE + drag
+  AUTO-SAVES on every add/delete -> no need to press save, nothing is ever lost.
+  (Do NOT press Delete/Backspace or the trash icon — those remove a whole layer.)
 
-SWITCH IMAGE = first arg:  F_WT_2 | F_HET_1 | F_HET_3
-WHOLE vs REGION:  annotate_topology.py F_WT_2 [y0 x0 size]
+SWITCH IMAGE:  annotate_topology.py F_WT_2 | F_HET_1 | F_HET_3
+REGION (optional): annotate_topology.py F_WT_2 1000 1000 400
 """
 import sys, json
 from pathlib import Path
@@ -43,7 +44,6 @@ def main():
     y0, x0, sz = (0, 0, None) if full else (int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
 
     import napari
-    from qtpy.QtWidgets import QPushButton, QWidget, QVBoxLayout, QLabel
 
     raw = tifffile.imread(find_raw(stem)).astype(np.float32)
     norm = normalize(raw)
@@ -53,11 +53,11 @@ def main():
     v = napari.Viewer(title=f'topology {stem}' + ('' if full else f' [{y0},{x0}] {sz}'))
     v.add_image(norm, name='raw', colormap='gray', contrast_limits=(0, 1))
     p_end = v.add_points(np.empty((0, 2)), name='ENDPOINT (yellow)',
-                         face_color='yellow', size=3, border_width=0)
+                         face_color='yellow', size=4, border_width=0)
     p_br = v.add_points(np.empty((0, 2)), name='BRANCH 分叉 (magenta)',
-                        face_color='magenta', size=3, border_width=0)
+                        face_color='magenta', size=4, border_width=0)
     p_ctr = v.add_points(np.empty((0, 2)), name='CENTER 中心 (red)',
-                         face_color='red', size=4, border_width=0)
+                         face_color='red', size=5, border_width=0)
     order = [p_ctr, p_br, p_end]
 
     fp = OUT / (f'{stem}_full_topology_annotations.json' if full
@@ -73,66 +73,41 @@ def main():
                                endpoint=len(p_end.data)))
         OUT.mkdir(exist_ok=True)
         fp.write_text(json.dumps(rec, indent=1))
-        v.status = (f'SAVED -> {fp.name}  center={rec["counts"]["center"]} '
+        v.status = (f'auto-saved {fp.name}: center={rec["counts"]["center"]} '
                     f'branch={rec["counts"]["branch"]} endpoint={rec["counts"]["endpoint"]}')
+
+    # AUTO-SAVE on any point edit (proven reliable)
+    for lyr in order:
+        lyr.events.data.connect(lambda e=None: do_save())
 
     def activate(layer):
         v.layers.selection.active = layer
         layer.mode = 'add'
-        v.status = f'marking: {layer.name}  (click to add)'
-        # auto-save whenever this layer's points change
-    # auto-save on any point edit
-    for lyr in order:
-        lyr.events.data.connect(lambda e: do_save())
+        v.status = f'marking: {layer.name}'
 
-    def do_undo(*_):
-        lyr = v.layers.selection.active
-        if lyr in order and len(lyr.data):
-            lyr.data = lyr.data[:-1]
+    # Q/W/E switch (keys keep canvas focus, unlike buttons) — proven to work
+    v.bind_key('q', lambda viewer: activate(p_ctr), overwrite=True)
+    v.bind_key('w', lambda viewer: activate(p_br), overwrite=True)
+    v.bind_key('e', lambda viewer: activate(p_end), overwrite=True)
 
-    def do_clear(*_):
-        for lyr in order:
-            lyr.data = np.empty((0, 2))
-
-    def do_del_nearest(*_):
+    @v.bind_key('d', overwrite=True)
+    def del_nearest(viewer):
         pos = np.asarray(v.cursor.position)[-2:]
         best = None
         for lyr in order:
             if len(lyr.data):
-                d = np.linalg.norm(np.asarray(lyr.data)[:, -2:] - pos, axis=1)
-                i = int(np.argmin(d))
-                if best is None or d[i] < best[2]:
-                    best = (lyr, i, float(d[i]))
+                dd = np.linalg.norm(np.asarray(lyr.data)[:, -2:] - pos, axis=1)
+                i = int(np.argmin(dd))
+                if best is None or dd[i] < best[2]:
+                    best = (lyr, i, float(dd[i]))
         if best and best[2] < 40:
             lyr, i, _ = best
             lyr.data = np.delete(lyr.data, i, axis=0)
 
-    # ---- button panel ----
-    panel = QWidget(); lay = QVBoxLayout(panel)
-    lay.addWidget(QLabel('Click a button to choose what to mark,\nthen LEFT-CLICK on the image.'))
-    for name, lyr in [('● Mark CENTER 中心 (red)', p_ctr),
-                      ('● Mark BRANCH 分叉 (magenta)', p_br),
-                      ('● Mark ENDPOINT (yellow)', p_end)]:
-        b = QPushButton(name); b.clicked.connect(lambda _, L=lyr: activate(L)); lay.addWidget(b)
-    lay.addWidget(QLabel('—'))
-    for name, fn in [('Undo last point', do_undo),
-                     ('Delete nearest to cursor (or key d)', do_del_nearest),
-                     ('Clear ALL', do_clear),
-                     ('💾 SAVE NOW', do_save)]:
-        b = QPushButton(name); b.clicked.connect(fn); lay.addWidget(b)
-    lay.addWidget(QLabel('(auto-saves on every edit too)'))
-    lay.addStretch()
-    v.window.add_dock_widget(panel, area='right', name='annotate')
-
     v.text_overlay.visible = True
-    v.text_overlay.font_size = 13
-    v.text_overlay.text = ('use the buttons on the right -> pick CENTER/BRANCH/ENDPOINT, '
-                           'then click image.  d=delete nearest. zoom=scroll, pan=space+drag.')
-    for k, fn in [('d', do_del_nearest), ('s', do_save), ('c', do_clear)]:
-        try:
-            v.bind_key(k, (lambda f: (lambda viewer: f()))(fn), overwrite=True)
-        except Exception:
-            pass
+    v.text_overlay.font_size = 14
+    v.text_overlay.text = ('q=CENTER中心(red)   w=BRANCH分叉(magenta)   e=ENDPOINT(yellow)   '
+                           'then click.   d=delete nearest.   AUTO-SAVES (never lost).')
 
     activate(p_ctr)
     napari.run()
