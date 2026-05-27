@@ -61,6 +61,32 @@ def clean(sk, min_component=12, spur_len=10):
     return prune_spurs(sk, spur_len)
 
 
+def break_loops(sk, raw_norm, max_hole=60):
+    """Microglia are TREES — loops are over-connection artifacts (the skeleton
+    went around a dark gap on both sides). Break each small enclosed loop at its
+    DIMMEST pixel (the spurious faint bridge), per Stephen's rule: don't glue
+    across a clear gap. Loops are rare (~9 in a full F_WT_2)."""
+    sk = sk.copy()
+    for _ in range(8):
+        holes = ndi.binary_fill_holes(sk) & ~sk
+        hl, hn = ndi.label(holes)
+        broke = False
+        for i in range(1, hn + 1):
+            hole = (hl == i)
+            if hole.sum() > max_hole:
+                continue
+            loop = binary_dilation(hole, iterations=1) & sk
+            ly, lx = np.where(loop)
+            if len(ly) < 3:
+                continue
+            j = int(np.argmin(raw_norm[ly, lx]))
+            sk[ly[j], lx[j]] = False
+            broke = True
+        if not broke:
+            break
+    return sk
+
+
 def merged_branches(sk, merge_radius=4):
     """One point per REAL junction. Dilate degree>=3 by merge_radius to fuse
     'branch after branch' clusters, then keep a cluster only if >=3 skeleton
