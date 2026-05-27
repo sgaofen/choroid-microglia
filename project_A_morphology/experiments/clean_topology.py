@@ -97,20 +97,29 @@ def merged_branches(sk, merge_radius=4):
     bpd = binary_dilation(sk & (d >= 3), iterations=merge_radius)
     l, nn = ndi.label(bpd, structure=np.ones((3, 3)))
     out = []
-    for i in range(1, nn + 1):
-        clust = (l == i)
-        # exits = number of DISTINCT skeleton arms leaving the cluster. Remove
-        # the cluster, label the rest, count distinct components touching it.
-        # (Robust for tight junctions where arms are close — the old ring-
-        # component count merged close arms and missed real 3-way junctions.)
-        rest = sk & ~clust
+    pad = merge_radius + 3
+    # Work in a LOCAL bounding box per cluster (find_objects) — labeling the
+    # full image once per cluster is O(clusters x image) and unusable on a
+    # full 3168^2 image. Local crops make it O(total skeleton).
+    objs = ndi.find_objects(l)
+    H, W = sk.shape
+    for i, sl in enumerate(objs, start=1):
+        if sl is None:
+            continue
+        y0 = max(0, sl[0].start - pad); y1 = min(H, sl[0].stop + pad)
+        x0 = max(0, sl[1].start - pad); x1 = min(W, sl[1].stop + pad)
+        clust = (l[y0:y1, x0:x1] == i)
+        skl = sk[y0:y1, x0:x1]
+        # exits = number of DISTINCT skeleton arms leaving the cluster: remove
+        # the cluster, label the rest locally, count components touching it.
+        rest = skl & ~clust
         rl, _ = ndi.label(rest, structure=np.ones((3, 3)))
         touch = rl[binary_dilation(clust, iterations=1) & rest]
         n_exits = len(np.unique(touch[touch > 0]))
         if n_exits >= 3:
-            ys, xs = np.where(clust & sk)
+            ys, xs = np.where(clust & skl)
             if len(ys):
-                out.append((ys.mean(), xs.mean()))
+                out.append((ys.mean() + y0, xs.mean() + x0))
     return np.array(out) if out else np.empty((0, 2))
 
 

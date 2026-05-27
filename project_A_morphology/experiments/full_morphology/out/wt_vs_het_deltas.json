@@ -1,0 +1,14 @@
+{
+ "mean_seg_len_um": -1.8,
+ "median_seg_len_um": -3.5,
+ "p90_seg_len_um": -1.8,
+ "cv_seg_len": 1.7,
+ "mean_thick_um": 4.3,
+ "cv_thick": 28.3,
+ "branch_per_mm2": -8.8,
+ "endpoint_per_mm2": 8.8,
+ "skel_len_um_per_mm2": -4.7,
+ "branch_per_100um_skel": -4.4,
+ "regional_cv_skeldens": 12.8,
+ "regional_cv_thick": 63.2
+}

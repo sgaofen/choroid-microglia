@@ -59,3 +59,4 @@ Thumbs.db
 
 # External reference repos cloned alongside the project (restore with git clone)
 project_B_stabilization/references/Shipley2020/
+F_*_segments.csv
