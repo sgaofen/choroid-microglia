@@ -20,12 +20,21 @@ Whole-image AVERAGE metrics do NOT separate WT from HET (mean process length
 −1.8%, KS D=0.017 ≈ identical distributions). My interpretation: the disease
 change is FOCAL, so whole-image averaging washes it out.
 
-So I switched the unit of analysis to the **REGION**: tile each image into
-200-px (~41 µm) tiles, compute a 6-feature morphology fingerprint per tile,
-cluster tiles into 4 "morphotypes", and compare the **COMPOSITION** (% of each
-morphotype) between conditions. Result: HET converts ~14–21 percentage points of
-its tissue from ramified to a **de-ramified / fragmented** morphotype, and these
-regions form contiguous spatial foci.
+So I changed the unit of analysis, two independent ways, and BOTH recover the
+same signal — HET microglia are **de-ramified / fragmented**:
+- **(A) Connected-component units (sharpest):** treat each connected skeleton
+  component as a unit (sparse region → one cell; dense region → one clump,
+  treated as a single unit per the biology). HET has +45% more components, each
+  shorter (median length −28%, p90 −42%), shifting from large branched arbors to
+  small simple cells and bare fragments. Every metric is consistent across both
+  HET replicates.
+- **(B) Region (200-px tile) composition:** tile the image, compute a 6-feature
+  fingerprint per tile, cluster tiles into 4 morphotypes, compare composition.
+  HET converts ~14–21 pts of tissue to a de-ramified morphotype, forming
+  contiguous spatial foci.
+
+(A) and (B) use completely different unit definitions yet agree — convergent
+evidence the conclusion is not an artifact of how the unit is drawn.
 
 To decide which signals to trust I used a **replicate-consistency criterion**:
 since the two HET are replicates, I only trust a metric if HET_1 ≈ HET_3 AND
@@ -64,6 +73,11 @@ brightness. Is this enough to rule out the confound?
 
 ## Data & figures in this zip
 - `RESULTS.md` — all results/tables (read this first)
+- `data/cc_features.csv` — every connected component: length, span, branches,
+  endpoints, thickness, morphotype label  (analysis A)
+- `data/cc_morphotype.json` — per-image component summary + composition
+- `images/cc_size_distribution.png` — component-size distribution, WT vs HET
+- `images/<stem>_cc_map.png` — components colored by morphotype
 - `data/region_features.csv` — every tile: 6 features + morphotype label
 - `data/region_morphotype.json` — cluster profiles + per-image composition
 - `data/aggregate.json`, `data/wt_vs_het_deltas.json` — whole-image baseline
@@ -76,7 +90,14 @@ brightness. Is this enough to rule out the confound?
   analyze, spot_check
 
 ## Please critique specifically
-1. **Is the region-morphotype + composition approach valid** for a focal,
+1. **Is the connected-component unit (analysis A) sound?** "Connected" depends on
+   the binarization (the connect-vs-separate problem reappears as "one component
+   or two"), and DAM fragmentation vs threshold-broken dim processes both produce
+   more small components. Is the component-size distribution + morphotype
+   composition a defensible readout despite this? Is treating dense clumps as
+   single units acceptable? Does the convergence of analyses A and B (different
+   units, same conclusion) meaningfully strengthen the claim?
+2. **Is the region-morphotype + composition approach (B) valid** for a focal,
    subtle difference, or are there standard methods I should use instead
    (e.g., per-cell morphometric clustering, spatial point-pattern statistics,
    texture/Haralick, fractal/lacunarity per region)?

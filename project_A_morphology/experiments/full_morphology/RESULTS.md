@@ -6,12 +6,51 @@ single Iba1-type channel.
 
 ## TL;DR
 **Whole-image AVERAGES do not separate WT from HET** — the difference is FOCAL,
-so averaging the whole image washes it out. **REGION-based morphotype
-composition does**: HET converts a reproducible fraction of tissue regions to a
-**de-ramified / fragmented** morphotype. The signal is replicated (both HET
-agree), robust to parameters, structural (not a brightness artifact), and
-matches the known **DAM** (disease-associated microglia: fragmented/beaded
-processes) phenotype.
+so averaging the whole image washes it out. Two unit-of-analysis changes both
+recover the same signal: **HET microglia are de-ramified / fragmented**.
+1. **Connected-component** units (sharpest): HET has +45% more components, each
+   shorter (median −28%, p90 −42%), shifting from large branched arbors to small
+   simple cells and fragments.
+2. **Region (200-px tile)** composition: HET converts a reproducible fraction of
+   tissue regions to a de-ramified morphotype, forming spatial foci.
+
+Both are replicated (the two HET agree on every metric), robust to parameters,
+structural (not a brightness artifact), match the known **DAM**
+(disease-associated microglia: fragmented/beaded processes) phenotype — and
+agree with EACH OTHER despite completely different unit definitions (convergent
+evidence). n = 3 images limits hard statistics.
+
+## 0. Connected-component analysis (sharpest, most interpretable)
+Use each CONNECTED skeleton component as the unit instead of an arbitrary grid:
+a sparse region's component = one cell (free per-cell morphology where reliable);
+a dense region's component = a clump of touching cells (Huixin: treat clumps as
+units, don't segment inside them). Maps directly onto Huixin's hierarchy
+(round/small vs ramified, by span, by branch count). Every metric passes the
+replicate-consistency screen (`cc_morphotype.py`):
+
+| metric | WT | HET_1 | HET_3 | reading |
+|---|---|---|---|---|
+| components / mm² | 12322 | 18081 | 17509 | HET +45% (broken into more pieces) |
+| % unbranched stubs | 5.8 | 7.0 | 8.3 | more bare fragments in HET |
+| median component length | 25.0 µm | 18.6 | 17.8 | HET −28% (shorter) |
+| p90 component length | 95.7 µm | 53.8 | 55.6 | HET −42% (big arbors shrink) |
+| % skeleton in >100 µm components | 45.3 | 24.6 | 31.3 | WT more connected |
+
+Component morphotypes (M0 fragment → M3 large arbor):
+| type | length | span | branches | reading | WT | HET_1 | HET_3 |
+|---|---|---|---|---|---|---|---|
+| M0 | 10.6 µm | 10.3 | 0 (96% stub) | bare fragment | 6.1 | 7.1 | 8.8 |
+| M1 | 14.6 µm | 11.2 | 5.6 | small simple cell | 31.3 | **51.2** | **53.2** |
+| M2 | 32.9 µm | 19.6 | 15.5 | medium ramified | 46.8 | 33.6 | 29.9 |
+| M3 | 156.6 µm | 47.3 | 89.1 | large complex arbor | 15.8 | **8.1** | **8.1** |
+
+HET shifts mass from M3/M2 (large/ramified) to M1/M0 (small/fragment); both HET
+agree on every morphotype (M3 identical at 8.1%). The component-size distribution
+shifts left in both HET (the two HET curves overlap). NOTE: the >100 µm
+"clump"-size metric here reflects process CONNECTIVITY (WT processes form large
+connected networks), NOT amoeboid cell aggregation — it is higher in WT.
+(`cc_features.csv`, `cc_morphotype.json`, `cc_size_distribution.png`,
+`<stem>_cc_map.png`.)
 
 ---
 

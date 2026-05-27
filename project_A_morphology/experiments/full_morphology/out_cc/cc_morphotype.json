@@ -1,0 +1,55 @@
+{
+ "clump_um": 100.0,
+ "k": 4,
+ "summary": {
+  "F_WT_2": {
+   "condition": "WT",
+   "n_comp": 760,
+   "comp_per_mm2": 12322.0,
+   "pct_stub": 5.8,
+   "median_len_um": 25.05,
+   "p90_len_um": 95.73,
+   "pct_skel_in_clumps": 45.3
+  },
+  "F_HET_1": {
+   "condition": "HET",
+   "n_comp": 962,
+   "comp_per_mm2": 18081.2,
+   "pct_stub": 7.0,
+   "median_len_um": 18.63,
+   "p90_len_um": 53.82,
+   "pct_skel_in_clumps": 24.6
+  },
+  "F_HET_3": {
+   "condition": "HET",
+   "n_comp": 954,
+   "comp_per_mm2": 17509.4,
+   "pct_stub": 8.3,
+   "median_len_um": 17.8,
+   "p90_len_um": 55.62,
+   "pct_skel_in_clumps": 31.3
+  }
+ },
+ "composition": {
+  "M0": {
+   "WT": 6.1,
+   "HET_1": 7.1,
+   "HET_3": 8.8
+  },
+  "M1": {
+   "WT": 31.3,
+   "HET_1": 51.2,
+   "HET_3": 53.2
+  },
+  "M2": {
+   "WT": 46.8,
+   "HET_1": 33.6,
+   "HET_3": 29.9
+  },
+  "M3": {
+   "WT": 15.8,
+   "HET_1": 8.1,
+   "HET_3": 8.1
+  }
+ }
+}
