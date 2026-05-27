@@ -52,7 +52,8 @@ def crop(arr, cy, cx):
     return arr[y0:y0 + WIN, x0:x0 + WIN]
 
 
-panels = [('F_WT_2', 1, 'WT healthy (C1: ramified)'),
+# canonical clustering: C0 = most ramified, C3 = de-ramified (last)
+panels = [('F_WT_2', 0, 'WT ramified (C0)'),
           ('F_HET_1', 3, 'HET de-ramified (C3: fragmented)')]
 
 fig, axes = plt.subplots(2, 2, figsize=(11, 11))

@@ -1,123 +1,75 @@
-# Review request: choroid-plexus microglia morphology — region-morphotype analysis
+# Re-review (round 2): choroid-plexus microglia morphology — demo on 3 images
 
-You are a senior quantitative-microscopy / image-analysis reviewer. I'm a
-student comparing **microglia morphology** between two conditions in
-**choroid-plexus whole-mount** fluorescence images. Please critically review
-whether my **data extraction is correct**, my **analysis is sound**, and whether
-it is **sufficient** — and give concrete, prioritized improvements. Be rigorous;
-I am NOT confident any of this is done right.
+You are a senior quantitative-microscopy reviewer. You reviewed an earlier
+version and gave a detailed, correct critique. This is the revised analysis.
+**Context: this is an exploratory DEMO to fully characterize 3 images, not a
+publication.** I am not trying to make a statistical WT-vs-HET claim with n=3 —
+I know I'd need more animals for that. Please critique the EXTRACTION and METHOD
+on these images: is what I now measure correct and trustworthy, and is the
+exploratory conclusion (HET = de-ramified/fragmented) well-supported on this
+data? Read `RESULTS.md` first.
 
-## Biological context
-- Choroid plexus whole-mount, single channel (Iba1-type microglia marker).
-- 3 images: F_WT_2 (WT/control); F_HET_1, F_HET_3 (HET — Alzheimer's model, two
-  biological replicates of one treatment). The expected difference is SUBTLE.
-- 16-bit TIF, ~3168², 0.207 µm/px.
-- Per-cell instance COUNTING is NOT reliable (dense, touching processes), so we
-  deliberately use metrics that do not require single-cell segmentation.
+## What I fixed from your last review
+1. **Topology counting unified (your #1 issue).** Branch/endpoint counts now come
+   from ONE global pass (`clean_topology.merged_branches`, exit≥3 + endpoints)
+   assigned to tiles/components. Tile branch counts now SUM to the whole-image
+   count (was 2.7–2.9× over-counted by the old dilated-degree≥3 count). See
+   `pipeline.py` (single source of truth).
+2. **One morphotype clustering (your #2 issue).** The canonical clustering uses
+   SHAPE/topology features only (no coverage, no abundance). Coverage-inclusive
+   clustering is kept ONLY as a labelled sensitivity. Maps/spot-check/JSON all use
+   the canonical labels now.
+3. **Denominators separated (your #3/#7).** Densities are reported per tissue-tile
+   area AND per foreground AND per 100 µm skeleton. Per-foreground was indeed
+   inconsistent across the 2 HET; per-tissue-area is clean and shows HET also has
+   lower process abundance — reported as a SEPARATE finding from fragmentation.
+4. **Pre-registered fragmentation score (your #6)**: z(ep/br)+z(ep/100µm)
+   −z(branch/100µm)−z(mean seg len), summarized per image (mean, hotspot %).
+5. **Segmentation sensitivity (your #4/#11)**: re-binarized + re-skeletonized
+   under otsu×0.7, otsu, local-adaptive, hysteresis, frangi. Fragmentation
+   direction holds in 4/5 (frangi over-fragments everything and saturates);
+   abundance↓ holds in 5/5. Also: a hysteresis low-threshold set to capture faint
+   processes FLOODS — they sit at background intensity (a real SNR limit).
+6. **Grid robustness (your #5/#8)**: fragmentation-hotspot enrichment in HET holds
+   across 5 grid-origin offsets + a sliding window (6/6), and tile size {31,41,62}
+   × k {3,4,5}.
+7. **Wording (your #12)**: reframed as exploratory/demo; "DAM-like" morphology not
+   "DAM"; confound "controlled, not ruled out"; thickness = apparent width;
+   no significance claims.
 
-## The key finding (please scrutinize this hardest)
-Whole-image AVERAGE metrics do NOT separate WT from HET (mean process length
-−1.8%, KS D=0.017 ≈ identical distributions). My interpretation: the disease
-change is FOCAL, so whole-image averaging washes it out.
-
-So I changed the unit of analysis, two independent ways, and BOTH recover the
-same signal — HET microglia are **de-ramified / fragmented**:
-- **(A) Connected-component units (sharpest):** treat each connected skeleton
-  component as a unit (sparse region → one cell; dense region → one clump,
-  treated as a single unit per the biology). HET has +45% more components, each
-  shorter (median length −28%, p90 −42%), shifting from large branched arbors to
-  small simple cells and bare fragments. Every metric is consistent across both
-  HET replicates.
-- **(B) Region (200-px tile) composition:** tile the image, compute a 6-feature
-  fingerprint per tile, cluster tiles into 4 morphotypes, compare composition.
-  HET converts ~14–21 pts of tissue to a de-ramified morphotype, forming
-  contiguous spatial foci.
-
-(A) and (B) use completely different unit definitions yet agree — convergent
-evidence the conclusion is not an artifact of how the unit is drawn.
-
-To decide which signals to trust I used a **replicate-consistency criterion**:
-since the two HET are replicates, I only trust a metric if HET_1 ≈ HET_3 AND
-both differ from WT in the same direction (replicate spread < WT gap). The clean,
-replicated signals all lie on ONE axis — increased fragmentation / de-ramification
-(endpoint-to-branch ratio +18%, de-ramified morphotype fraction up, endpoint
-density up, branch density down). See `RESULTS.md` for all tables.
-
-## Pipeline (what produced the data)
-1. **Binarize**: normalize (1–99.5 pct) → Gaussian σ=1 → threshold = Otsu×0.7 →
-   closing(disk2) → remove <20 px. (Raising the threshold to keep only bright
-   signal BROKE processes into fragments → spurious endpoints; lowering it floods
-   background. Otsu×0.7 is a compromise. This faint-continuation-vs-isolated-faint
-   decision seems unsolvable by a single threshold.)
-2. **Skeletonize** → 1-px skeleton (precomputed "v29").
-3. **Topology cleanup** (`clean_topology.py`): drop components <12 px; prune
-   terminal spurs ≤8 px; branch points = degree≥3 clusters merged within ~8 px,
-   kept only if ≥3 arms leave; break loops (microglia are trees) at the dimmest
-   pixel.
-4. **Per-region features** (`region_morphotype.py`): per 200-px tile (fg ≥3%):
-   skeleton-length density (/mm² fg), branch density, endpoint density,
-   **endpoint/branch ratio** (fragmentation), mean thickness (distance-transform
-   along skeleton ×2), ramification (branches/100 µm skeleton).
-5. **Cluster** tiles (pooled across all 3 images) with StandardScaler + k-means
-   (k=4) → morphotypes; per-image composition = % of tiles per morphotype.
-6. **Replicate-consistency screen** (`replicate_consistency.py`) and
-   **robustness** over tile∈{31,41,62 µm} × k∈{3,4,5} (`robustness.py`).
-7. Whole-image aggregate (`analyze.py`) kept as the negative-control baseline.
-
-## Confound I already checked
-HET coverage is ~17% lower (dimmer/sparser). I (a) re-clustered with the coverage
-feature removed (de-ramified enrichment survives, +13.7 pts), and (b) noted two
-morphotypes with equal low coverage but opposite branching, only the de-ramified
-one rising in HET. So the signal has a structural component independent of
-brightness. Is this enough to rule out the confound?
+## Pipeline (brief; full code in `code/`)
+normalize(1–99.5pct) → Gaussian σ=1 → segment (default otsu×0.7) → close → remove
+<20px → skeletonize → clean_topology (drop <12px components, prune spurs ≤8px,
+merge junctions exit≥3, break tree loops at dimmest px) → global topology assigned
+to 200-px tiles / connected components → shape-only k-means morphotypes +
+fragmentation score → replicate-consistency screen → segmentation & grid
+sensitivity.
 
 ## Data & figures in this zip
-- `RESULTS.md` — all results/tables (read this first)
-- `data/cc_features.csv` — every connected component: length, span, branches,
-  endpoints, thickness, morphotype label  (analysis A)
-- `data/cc_morphotype.json` — per-image component summary + composition
-- `images/cc_size_distribution.png` — component-size distribution, WT vs HET
-- `images/<stem>_cc_map.png` — components colored by morphotype
-- `data/region_features.csv` — every tile: 6 features + morphotype label
-- `data/region_morphotype.json` — cluster profiles + per-image composition
-- `data/aggregate.json`, `data/wt_vs_het_deltas.json` — whole-image baseline
-- `data/<stem>_segments.csv`, `<stem>_regional.csv` — per-segment / per-tile raw
-- `images/<stem>_morphotype_map.png` — spatial morphotype maps (focality)
-- `images/composition_bar.png`, `feature_distributions.png`
-- `images/spot_check_WT_vs_HET.png` — raw vs skeleton, WT-healthy vs HET-deramified
-- `images/CURRENT_<stem>.png` — full-image raw vs skeleton+branch+endpoint overlays
-- `code/` — clean_topology, region_morphotype, replicate_consistency, robustness,
-  analyze, spot_check
+- `RESULTS.md` (read first), `aggregate.json` (whole-image negative baseline)
+- `data/region_features.csv`, `region_morphotype.json` — corrected tile analysis
+- `data/cc_features.csv`, `cc_morphotype.json` — connected-component analysis
+- `data/F_*_segments.csv` — per skeleton segment
+- `images/<stem>_morphotype_map.png` (canonical), `composition_bar.png`,
+  `fragmentation_distribution.png`
+- `images/<stem>_cc_map.png`, `cc_size_distribution.png`
+- `images/segmentation_compare_crop.png` — same HET window under each method
+- `images/spot_check_WT_vs_HET.png`, `images/CURRENT_<stem>.png`
+- `code/` — pipeline, clean_topology, region_morphotype, cc_morphotype,
+  segmentation_compare, grid_robustness, spot_check, analyze
 
-## Please critique specifically
-1. **Is the connected-component unit (analysis A) sound?** "Connected" depends on
-   the binarization (the connect-vs-separate problem reappears as "one component
-   or two"), and DAM fragmentation vs threshold-broken dim processes both produce
-   more small components. Is the component-size distribution + morphotype
-   composition a defensible readout despite this? Is treating dense clumps as
-   single units acceptable? Does the convergence of analyses A and B (different
-   units, same conclusion) meaningfully strengthen the claim?
-2. **Is the region-morphotype + composition approach (B) valid** for a focal,
-   subtle difference, or are there standard methods I should use instead
-   (e.g., per-cell morphometric clustering, spatial point-pattern statistics,
-   texture/Haralick, fractal/lacunarity per region)?
-2. **Replicate-consistency criterion**: is "both replicates same side of control,
-   spread < gap" a defensible screen with n=2 vs 1, or is it ad hoc? Better way?
-3. **Feature extraction**: is endpoint/branch ratio a sound fragmentation metric?
-   Is distance-transform-along-skeleton ×2 a valid thickness/diameter? Is
-   branch-distance the right length unit? Pitfalls?
-4. **Topology**: are the spur-prune / branch-merge / loop-break / exit≥3 rules
-   sound, or do they bias counts? (vs ImageJ AnalyzeSkeleton / skan conventions)
-5. **Tiling**: is a fixed 200-px grid appropriate? Should tiles be tissue-aware
-   or multi-scale? Edge effects?
-6. **Confound**: is my brightness-confound rule-out sufficient? What else could
-   masquerade as "fragmentation" (threshold breaking dim processes, focus,
-   staining)? How would you control it?
-7. **Sufficiency / statistics**: with n=1 WT vs 2 HET and non-independent tiles
-   (pseudo-replication), what can/can't be claimed? What is the minimum design
-   (images/animals, mixed-effects model?) to make the de-ramification claim
-   publishable?
-8. **Threshold dilemma**: better classical approach (Frangi/vesselness, tubeness,
-   local-adaptive) before any metric is trustworthy?
-
-Give concrete, prioritized recommendations.
+## Please critique (focused on these 3 images, not publishability)
+1. Is the corrected topology counting now sound? Any remaining bias in the
+   spur-prune / exit≥3 merge / loop-break rules (esp. loop-breaking in a 2D
+   projection — could real overlaps be cut)?
+2. With topology fixed, is the **fragmentation score** the right primary readout?
+   Better composite, or should I report its parts separately?
+3. Given the segmentation sensitivity (4/5 methods agree; faint recovery is
+   SNR-limited), how much should I trust the fragmentation signal as biological
+   vs residual segmentation effect? Is a pixel classifier worth building for a
+   demo, or overkill?
+4. Connected-component unit: is treating dense clumps as single units, and
+   reading the component-size distribution, defensible? Does the region↔component
+   convergence add real weight?
+5. Anything else you'd measure on THESE images to understand them better
+   (e.g., spatial statistics on the foci — Moran's I, hotspot clustering)?

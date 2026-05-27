@@ -41,9 +41,9 @@ def segment(norm, method='otsu07'):
         b = sm > filters.threshold_otsu(sm) * 0.7
     elif method == 'otsu':
         b = sm > filters.threshold_otsu(sm)
-    elif method == 'hysteresis':                       # keep faint only if connected to a bright core
-        t = filters.threshold_otsu(sm)
-        b = filters.apply_hysteresis_threshold(sm, t * 0.5, t)
+    elif method == 'hysteresis':                       # bright seeds, grow down toward faint
+        t = filters.threshold_otsu(sm)                 # NOTE: low must stay ABOVE background (~0.6t here);
+        b = filters.apply_hysteresis_threshold(sm, t * 0.7, t)  # going lower FLOODS (faint processes sit at bg level)
     elif method == 'frangi':                           # tubeness / ridge enhancement for thin processes
         f = filters.frangi(sm, sigmas=range(1, 5), black_ridges=False)
         b = f > filters.threshold_otsu(f)
