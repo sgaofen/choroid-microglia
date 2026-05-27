@@ -62,14 +62,24 @@ def clean(sk, min_component=12, spur_len=10):
 
 
 def merged_branches(sk, merge_radius=4):
-    """One point per real junction: dilate degree>=3 by merge_radius (~2*radius
-    px), label clusters, return centroids. Removes 'branch after branch'."""
+    """One point per REAL junction. Dilate degree>=3 by merge_radius to fuse
+    'branch after branch' clusters, then keep a cluster only if >=3 skeleton
+    paths actually leave it. Enforces Stephen's rule (2026-05-27): a path's last
+    point must be an ENDPOINT, never a branch — terminal cluster has 1 exit,
+    pass-through has 2, real junction >=3."""
     d = degree(sk)
     bpd = binary_dilation(sk & (d >= 3), iterations=merge_radius)
     l, nn = ndi.label(bpd, structure=np.ones((3, 3)))
-    if not nn:
-        return np.empty((0, 2))
-    return np.array(ndi.center_of_mass(bpd, l, range(1, nn + 1)))
+    out = []
+    for i in range(1, nn + 1):
+        clust = (l == i)
+        ring = binary_dilation(clust, iterations=1) & sk & ~clust
+        _, n_exits = ndi.label(ring, structure=np.ones((3, 3)))
+        if n_exits >= 3:
+            ys, xs = np.where(clust & sk)
+            if len(ys):
+                out.append((ys.mean(), xs.mean()))
+    return np.array(out) if out else np.empty((0, 2))
 
 
 def endpoints(sk):
