@@ -1,20 +1,21 @@
 """
-Topology annotator (blank): mark CELL CENTER (中心) + BRANCH POINT (分叉点)
-+ ENDPOINT yourself, from scratch. Only the raw image is shown (no skeleton).
+Topology annotator — mark cell CENTER + BRANCH point + ENDPOINT.
 
-CONTROLS
-  add a point      : pick a layer (左侧), click on the image
-  DELETE nearest   : RIGHT-CLICK near a point (in that layer)  <-- new
-  clear ALL points : press  c
-  move a point     : Select tool (arrow) -> drag
-  zoom / pan       : scroll = zoom ; hold SPACE + drag = pan (works while adding)
-  point size       : slider in layer controls (already tiny)
-  SAVE             : press  s
+Simple workflow (legend is shown on-screen too):
+  press 1  -> now marking 中心 CENTER   (red),   click image to drop
+  press 2  -> now marking 分叉 BRANCH   (magenta)
+  press 3  -> now marking ENDPOINT      (yellow)
+  d        -> DELETE the point nearest the cursor (use THIS, NOT the Delete key)
+  c        -> clear all points
+  s        -> SAVE to JSON
+  scroll   -> zoom        space+drag -> pan
+  (right-click also deletes nearest. Never press Delete/Backspace or the trash
+   icon — those remove the whole layer, a napari quirk.)
 
 SWITCH IMAGE = first arg:  F_WT_2 | F_HET_1 | F_HET_3
 WHOLE vs REGION:
-  ...annotate_topology.py F_WT_2                 # whole image (default)
-  ...annotate_topology.py F_WT_2 1000 1000 600   # region y0 x0 size
+  annotate_topology.py F_WT_2                  # whole image
+  annotate_topology.py F_WT_2 1000 1000 600    # region y0 x0 size
 """
 import sys, json
 from pathlib import Path
@@ -57,16 +58,32 @@ def main():
 
     v = napari.Viewer(title=f'topology {stem}' + ('' if full else f' [{y0},{x0}] {sz}'))
     v.add_image(norm, name='raw', colormap='gray', contrast_limits=(0, 1))
-    # EMPTY layers, very small points
-    p_end = v.add_points(np.empty((0, 2)), name='endpoint',
+    p_end = v.add_points(np.empty((0, 2)), name='3 ENDPOINT (yellow)',
                          face_color='yellow', size=3, border_width=0)
-    p_br = v.add_points(np.empty((0, 2)), name='分叉点 branch',
+    p_br = v.add_points(np.empty((0, 2)), name='2 BRANCH 分叉 (magenta)',
                         face_color='magenta', size=3, border_width=0)
-    p_ctr = v.add_points(np.empty((0, 2)), name='中心 center',
+    p_ctr = v.add_points(np.empty((0, 2)), name='1 CENTER 中心 (red)',
                          face_color='red', size=4, border_width=0)
-    p_ctr.mode = 'add'
+    layers = {'1': p_ctr, '2': p_br, '3': p_end}
 
-    # right-click deletes the nearest point in that layer
+    # on-screen legend (always visible)
+    v.text_overlay.visible = True
+    v.text_overlay.font_size = 13
+    v.text_overlay.color = 'white'
+    v.text_overlay.text = (
+        '1=CENTER中心(red)   2=BRANCH分叉(magenta)   3=ENDPOINT(yellow)\n'
+        'click=add point    d=delete nearest    c=clear all    s=SAVE\n'
+        'scroll=zoom   space+drag=pan    (do NOT press Delete — it kills the layer)')
+
+    def activate(key):
+        lyr = layers[key]
+        v.layers.selection.active = lyr
+        lyr.mode = 'add'
+        v.status = f'marking: {lyr.name}'
+
+    for kk in ('1', '2', '3'):
+        v.bind_key(kk, (lambda k: (lambda viewer: activate(k)))(kk), overwrite=True)
+
     def attach_rclick(layer):
         def cb(lyr, event):
             if event.button == 2 and len(lyr.data):
@@ -74,22 +91,34 @@ def main():
                     pos = np.asarray(lyr.world_to_data(event.position))[-2:]
                 except Exception:
                     pos = np.asarray(event.position)[-2:]
-                data = np.asarray(lyr.data)[:, -2:]
-                d = np.linalg.norm(data - pos, axis=1)
+                d = np.linalg.norm(np.asarray(lyr.data)[:, -2:] - pos, axis=1)
                 i = int(np.argmin(d))
                 if d[i] < 30:
                     lyr.data = np.delete(lyr.data, i, axis=0)
         layer.mouse_drag_callbacks.append(cb)
-    for lyr in (p_ctr, p_br, p_end):
+    for lyr in layers.values():
         attach_rclick(lyr)
 
-    @v.bind_key('c')
-    def clear_all(viewer):
-        for lyr in (p_ctr, p_br, p_end):
-            lyr.data = np.empty((0, 2))
-        print('[cleared all points]')
+    @v.bind_key('d', overwrite=True)
+    def del_nearest(viewer):
+        pos = np.asarray(viewer.cursor.position)[-2:]
+        best = None
+        for lyr in layers.values():
+            if len(lyr.data):
+                d = np.linalg.norm(np.asarray(lyr.data)[:, -2:] - pos, axis=1)
+                i = int(np.argmin(d))
+                if best is None or d[i] < best[2]:
+                    best = (lyr, i, float(d[i]))
+        if best and best[2] < 40:
+            lyr, i, _ = best
+            lyr.data = np.delete(lyr.data, i, axis=0)
 
-    @v.bind_key('s')
+    @v.bind_key('c', overwrite=True)
+    def clear_all(viewer):
+        for lyr in layers.values():
+            lyr.data = np.empty((0, 2))
+
+    @v.bind_key('s', overwrite=True)
     def save(viewer):
         def gpts(layer):
             return [[float(p[0] + y0), float(p[1] + x0)] for p in layer.data]
@@ -102,14 +131,11 @@ def main():
         tag = 'full' if full else f'{y0}_{x0}'
         fp = OUT / f'{stem}_{tag}_topology_annotations.json'
         fp.write_text(json.dumps(rec, indent=1))
-        print(f'[saved] {fp}  center={rec["counts"]["center"]} '
-              f'branch={rec["counts"]["branch"]} endpoint={rec["counts"]["endpoint"]}')
+        v.status = (f'SAVED center={rec["counts"]["center"]} '
+                    f'branch={rec["counts"]["branch"]} endpoint={rec["counts"]["endpoint"]}')
+        print(f'[saved] {fp}  {rec["counts"]}')
 
-    print('=' * 60)
-    print(f'TOPOLOGY {stem} {"WHOLE" if full else f"[{y0},{x0}] {sz}"} — blank, no skeleton')
-    print('add: pick layer + click | RIGHT-CLICK: delete nearest | c: clear all')
-    print('zoom=scroll, pan=space+drag, move=Select tool. Save: s')
-    print('=' * 60)
+    activate('1')  # start on CENTER, add mode
     napari.run()
 
 
