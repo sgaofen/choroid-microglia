@@ -1,0 +1,23 @@
+{
+ "F_WT_2": {
+  "mean_longest": 148.7,
+  "p90_longest": 272.0,
+  "cv_longest": 0.629,
+  "mean_thickest": 5.27,
+  "cv_thickest": 0.354
+ },
+ "F_HET_1": {
+  "mean_longest": 106.6,
+  "p90_longest": 222.8,
+  "cv_longest": 0.726,
+  "mean_thickest": 5.45,
+  "cv_thickest": 0.359
+ },
+ "F_HET_3": {
+  "mean_longest": 117.1,
+  "p90_longest": 235.3,
+  "cv_longest": 0.707,
+  "mean_thickest": 5.5,
+  "cv_thickest": 0.432
+ }
+}
