@@ -8,10 +8,11 @@ WHAT YOU DO:
         complex      (lime)   — branched, large / many secondary branches
   - 1 shapes layer "clump_exclude" (cyan): draw polygons/rectangles around
     dense clumps to EXCLUDE from analysis.
-  - The orange/lime layers are PRE-FILLED with the algorithm's guesses so you
-    correct (move / delete / re-categorize) instead of starting from scratch.
-  - The 'round' layer is EMPTY on purpose — the algorithm can't find round
-    cells, so adding those is the most valuable thing you do.
+  - ALL THREE layers are PRE-FILLED with the algorithm's guesses so you correct
+    (move / delete / re-categorize) instead of starting from scratch.
+  - 'round' is pre-filled from the round-cell detector (mass-without-topology);
+    it is sparse and likely incomplete, so ADDING the round cells it missed is
+    the most valuable thing you do.
 
 REFERENCE LAYERS (don't edit, just look): raw image, skeleton (cyan),
 v30f detected centers (faint yellow).
@@ -85,6 +86,16 @@ def main():
                    if c['n_local_branches'] >= med]
     ref_pts = [[c['yc'] - oy, c['xc'] - ox] for c in cells]
 
+    # pre-fill round layer from the round-cell detector (mass-without-topology)
+    round_pts = []
+    rc_path = ROOT / 'experiments/round_cell_detector' / f'{stem}_round_cells.json'
+    if rc_path.exists():
+        rc = json.loads(rc_path.read_text())
+        if crop:
+            y0, x0, sz = crop
+            rc = [r for r in rc if y0 <= r['yc'] < y0 + sz and x0 <= r['xc'] < x0 + sz]
+        round_pts = [[r['yc'] - oy, r['xc'] - ox] for r in rc]
+
     v = napari.Viewer(title=f'annotate {stem}' + (f' crop{crop}' if crop else ''))
     v.add_image(norm, name='raw', colormap='gray', contrast_limits=(0, 1))
     v.add_image(skel, name='skeleton (ref)', colormap='cyan',
@@ -92,8 +103,9 @@ def main():
     if ref_pts:
         v.add_points(np.array(ref_pts), name='v30f detected (ref)',
                      face_color='yellow', opacity=0.35, size=6)
-    pr = v.add_points(np.empty((0, 2)), name='round',
-                      face_color='red', size=14, border_color='white')
+    pr = v.add_points(np.array(round_pts) if round_pts else np.empty((0, 2)),
+                      name='round', face_color='red', size=14,
+                      border_color='white')
     ps = v.add_points(np.array(simple_pts) if simple_pts else np.empty((0, 2)),
                       name='simple', face_color='orange', size=14,
                       border_color='white')
@@ -127,9 +139,10 @@ def main():
     print('=' * 64)
     print(f'Annotating {stem}{" crop"+str(crop) if crop else " (full image)"}')
     print('Pick a point layer (round/simple/complex) in the left list, then')
-    print('click to drop points. "round" is active & empty — add the round')
-    print('cells the algorithm missed. Draw clump_exclude shapes around dense')
-    print('blobs. Press  s  to save (re-press anytime). Close window when done.')
+    print('click to drop points. "round" is active and pre-filled from the')
+    print(f'detector ({len(round_pts)} candidates) — add the ones it missed,')
+    print('delete wrong ones. Draw clump_exclude shapes around dense blobs.')
+    print('Press  s  to save (re-press anytime). Close window when done.')
     print('=' * 64)
     napari.run()
 

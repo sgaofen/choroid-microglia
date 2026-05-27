@@ -1,0 +1,23 @@
+{
+ "F_WT_2": {
+  "process_bearing": 1594,
+  "round": 27,
+  "total": 1621,
+  "pct_round": 1.7,
+  "round_per_mm2": 436.0
+ },
+ "F_HET_1": {
+  "process_bearing": 1356,
+  "round": 32,
+  "total": 1388,
+  "pct_round": 2.3,
+  "round_per_mm2": 598.0
+ },
+ "F_HET_3": {
+  "process_bearing": 1263,
+  "round": 28,
+  "total": 1291,
+  "pct_round": 2.2,
+  "round_per_mm2": 509.0
+ }
+}

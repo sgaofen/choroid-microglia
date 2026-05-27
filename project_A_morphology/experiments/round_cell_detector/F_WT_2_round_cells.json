@@ -1,0 +1,164 @@
+[
+ {
+  "yc": 1212,
+  "xc": 293,
+  "soma_r": 5.2,
+  "intensity": 0.53
+ },
+ {
+  "yc": 2545,
+  "xc": 2413,
+  "soma_r": 4.6,
+  "intensity": 1.0
+ },
+ {
+  "yc": 2794,
+  "xc": 1767,
+  "soma_r": 4.5,
+  "intensity": 0.942
+ },
+ {
+  "yc": 2669,
+  "xc": 1552,
+  "soma_r": 4.4,
+  "intensity": 0.548
+ },
+ {
+  "yc": 3052,
+  "xc": 665,
+  "soma_r": 4.0,
+  "intensity": 0.623
+ },
+ {
+  "yc": 2588,
+  "xc": 1757,
+  "soma_r": 4.0,
+  "intensity": 0.886
+ },
+ {
+  "yc": 2977,
+  "xc": 671,
+  "soma_r": 3.9,
+  "intensity": 0.67
+ },
+ {
+  "yc": 2839,
+  "xc": 2523,
+  "soma_r": 3.7,
+  "intensity": 1.0
+ },
+ {
+  "yc": 1764,
+  "xc": 2370,
+  "soma_r": 3.6,
+  "intensity": 0.855
+ },
+ {
+  "yc": 1374,
+  "xc": 2113,
+  "soma_r": 3.6,
+  "intensity": 1.0
+ },
+ {
+  "yc": 1415,
+  "xc": 2828,
+  "soma_r": 3.6,
+  "intensity": 0.345
+ },
+ {
+  "yc": 2484,
+  "xc": 1617,
+  "soma_r": 3.6,
+  "intensity": 1.0
+ },
+ {
+  "yc": 3141,
+  "xc": 2534,
+  "soma_r": 3.5,
+  "intensity": 0.464
+ },
+ {
+  "yc": 2672,
+  "xc": 1343,
+  "soma_r": 3.4,
+  "intensity": 0.869
+ },
+ {
+  "yc": 1790,
+  "xc": 2567,
+  "soma_r": 3.4,
+  "intensity": 0.984
+ },
+ {
+  "yc": 1466,
+  "xc": 2034,
+  "soma_r": 3.4,
+  "intensity": 0.973
+ },
+ {
+  "yc": 2684,
+  "xc": 2244,
+  "soma_r": 3.4,
+  "intensity": 0.961
+ },
+ {
+  "yc": 897,
+  "xc": 850,
+  "soma_r": 3.4,
+  "intensity": 1.0
+ },
+ {
+  "yc": 1476,
+  "xc": 2519,
+  "soma_r": 3.3,
+  "intensity": 0.943
+ },
+ {
+  "yc": 1505,
+  "xc": 2800,
+  "soma_r": 3.3,
+  "intensity": 1.0
+ },
+ {
+  "yc": 2620,
+  "xc": 2755,
+  "soma_r": 3.2,
+  "intensity": 0.79
+ },
+ {
+  "yc": 1223,
+  "xc": 963,
+  "soma_r": 3.2,
+  "intensity": 0.56
+ },
+ {
+  "yc": 1764,
+  "xc": 2552,
+  "soma_r": 3.2,
+  "intensity": 0.882
+ },
+ {
+  "yc": 872,
+  "xc": 363,
+  "soma_r": 3.2,
+  "intensity": 0.331
+ },
+ {
+  "yc": 2924,
+  "xc": 2673,
+  "soma_r": 3.2,
+  "intensity": 1.0
+ },
+ {
+  "yc": 1516,
+  "xc": 2208,
+  "soma_r": 3.1,
+  "intensity": 0.615
+ },
+ {
+  "yc": 1571,
+  "xc": 2121,
+  "soma_r": 3.1,
+  "intensity": 1.0
+ }
+]

@@ -1,0 +1,194 @@
+[
+ {
+  "yc": 2342,
+  "xc": 1949,
+  "soma_r": 9.8,
+  "intensity": 0.795
+ },
+ {
+  "yc": 989,
+  "xc": 1805,
+  "soma_r": 8.0,
+  "intensity": 0.557
+ },
+ {
+  "yc": 1637,
+  "xc": 2243,
+  "soma_r": 6.5,
+  "intensity": 0.861
+ },
+ {
+  "yc": 1293,
+  "xc": 227,
+  "soma_r": 6.5,
+  "intensity": 0.832
+ },
+ {
+  "yc": 1154,
+  "xc": 1779,
+  "soma_r": 6.2,
+  "intensity": 0.987
+ },
+ {
+  "yc": 481,
+  "xc": 1158,
+  "soma_r": 6.1,
+  "intensity": 0.865
+ },
+ {
+  "yc": 1997,
+  "xc": 452,
+  "soma_r": 6.0,
+  "intensity": 0.867
+ },
+ {
+  "yc": 1525,
+  "xc": 757,
+  "soma_r": 5.5,
+  "intensity": 0.488
+ },
+ {
+  "yc": 1022,
+  "xc": 2570,
+  "soma_r": 5.3,
+  "intensity": 0.57
+ },
+ {
+  "yc": 934,
+  "xc": 1432,
+  "soma_r": 5.3,
+  "intensity": 0.495
+ },
+ {
+  "yc": 2291,
+  "xc": 2494,
+  "soma_r": 5.1,
+  "intensity": 0.434
+ },
+ {
+  "yc": 1282,
+  "xc": 2901,
+  "soma_r": 4.9,
+  "intensity": 0.698
+ },
+ {
+  "yc": 2473,
+  "xc": 324,
+  "soma_r": 4.7,
+  "intensity": 0.399
+ },
+ {
+  "yc": 1110,
+  "xc": 420,
+  "soma_r": 4.4,
+  "intensity": 0.582
+ },
+ {
+  "yc": 2276,
+  "xc": 334,
+  "soma_r": 4.1,
+  "intensity": 1.0
+ },
+ {
+  "yc": 3002,
+  "xc": 1254,
+  "soma_r": 4.0,
+  "intensity": 1.0
+ },
+ {
+  "yc": 792,
+  "xc": 1955,
+  "soma_r": 3.9,
+  "intensity": 0.864
+ },
+ {
+  "yc": 20,
+  "xc": 1270,
+  "soma_r": 3.8,
+  "intensity": 1.0
+ },
+ {
+  "yc": 1221,
+  "xc": 2935,
+  "soma_r": 3.8,
+  "intensity": 0.9
+ },
+ {
+  "yc": 917,
+  "xc": 1924,
+  "soma_r": 3.7,
+  "intensity": 0.935
+ },
+ {
+  "yc": 1355,
+  "xc": 3073,
+  "soma_r": 3.7,
+  "intensity": 1.0
+ },
+ {
+  "yc": 1412,
+  "xc": 899,
+  "soma_r": 3.7,
+  "intensity": 0.553
+ },
+ {
+  "yc": 971,
+  "xc": 2458,
+  "soma_r": 3.7,
+  "intensity": 0.887
+ },
+ {
+  "yc": 708,
+  "xc": 9,
+  "soma_r": 3.7,
+  "intensity": 0.704
+ },
+ {
+  "yc": 1973,
+  "xc": 2729,
+  "soma_r": 3.6,
+  "intensity": 1.0
+ },
+ {
+  "yc": 1610,
+  "xc": 2882,
+  "soma_r": 3.6,
+  "intensity": 0.913
+ },
+ {
+  "yc": 2122,
+  "xc": 1593,
+  "soma_r": 3.5,
+  "intensity": 1.0
+ },
+ {
+  "yc": 1010,
+  "xc": 2077,
+  "soma_r": 3.3,
+  "intensity": 0.689
+ },
+ {
+  "yc": 3054,
+  "xc": 1045,
+  "soma_r": 3.3,
+  "intensity": 0.584
+ },
+ {
+  "yc": 565,
+  "xc": 1599,
+  "soma_r": 3.3,
+  "intensity": 0.989
+ },
+ {
+  "yc": 2290,
+  "xc": 2298,
+  "soma_r": 3.2,
+  "intensity": 0.705
+ },
+ {
+  "yc": 3157,
+  "xc": 319,
+  "soma_r": 3.2,
+  "intensity": 0.604
+ }
+]
