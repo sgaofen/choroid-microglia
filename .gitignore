@@ -36,6 +36,7 @@ F_*_trunk_metrics_v30*.json
 F_*_endpoint_counts_v30*.json
 F_*_small_cell_candidates_v30*.json
 F_*_combined_v30*.json
+F_*_features.json
 
 # Python
 __pycache__/

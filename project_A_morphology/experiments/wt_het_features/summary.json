@@ -1,0 +1,50 @@
+{
+ "F_WT_2": {
+  "stem": "F_WT_2",
+  "n": 1594,
+  "density": 25733.0,
+  "pct_round": 0.0,
+  "pct_small": 39.6,
+  "pct_large": 60.4,
+  "mean_primary": 2.75,
+  "mean_secondary": 11.47,
+  "mean_extent": 44.6,
+  "mean_thick": 3.59,
+  "mean_frag": 1.57,
+  "cv_extent": 0.039,
+  "cv_secondary": 0.692,
+  "cv_primary": 0.374
+ },
+ "F_HET_1": {
+  "stem": "F_HET_1",
+  "n": 1356,
+  "density": 25322.0,
+  "pct_round": 0.0,
+  "pct_small": 51.2,
+  "pct_large": 48.8,
+  "mean_primary": 2.69,
+  "mean_secondary": 9.64,
+  "mean_extent": 44.0,
+  "mean_thick": 3.77,
+  "mean_frag": 1.47,
+  "cv_extent": 0.072,
+  "cv_secondary": 0.712,
+  "cv_primary": 0.394
+ },
+ "F_HET_3": {
+  "stem": "F_HET_3",
+  "n": 1263,
+  "density": 22973.0,
+  "pct_round": 0.0,
+  "pct_small": 46.5,
+  "pct_large": 53.5,
+  "mean_primary": 2.78,
+  "mean_secondary": 11.14,
+  "mean_extent": 44.0,
+  "mean_thick": 3.66,
+  "mean_frag": 1.5,
+  "cv_extent": 0.083,
+  "cv_secondary": 0.77,
+  "cv_primary": 0.392
+ }
+}
