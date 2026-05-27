@@ -2,9 +2,10 @@
 Topology annotator — mark cell CENTER + BRANCH point + ENDPOINT.
 
 Simple workflow (legend is shown on-screen too):
-  press 1  -> now marking 中心 CENTER   (red),   click image to drop
-  press 2  -> now marking 分叉 BRANCH   (magenta)
-  press 3  -> now marking ENDPOINT      (yellow)
+  press q  -> now marking 中心 CENTER   (red),   click image to drop
+  press w  -> now marking 分叉 BRANCH   (magenta)
+  press e  -> now marking ENDPOINT      (yellow)
+  (number keys 1/2/3 are NOT used — they clash with napari's tool shortcuts)
   d        -> DELETE the point nearest the cursor (use THIS, NOT the Delete key)
   c        -> clear all points
   s        -> SAVE to JSON
@@ -58,20 +59,20 @@ def main():
 
     v = napari.Viewer(title=f'topology {stem}' + ('' if full else f' [{y0},{x0}] {sz}'))
     v.add_image(norm, name='raw', colormap='gray', contrast_limits=(0, 1))
-    p_end = v.add_points(np.empty((0, 2)), name='3 ENDPOINT (yellow)',
+    p_end = v.add_points(np.empty((0, 2)), name='E = ENDPOINT (yellow)',
                          face_color='yellow', size=3, border_width=0)
-    p_br = v.add_points(np.empty((0, 2)), name='2 BRANCH 分叉 (magenta)',
+    p_br = v.add_points(np.empty((0, 2)), name='W = BRANCH 分叉 (magenta)',
                         face_color='magenta', size=3, border_width=0)
-    p_ctr = v.add_points(np.empty((0, 2)), name='1 CENTER 中心 (red)',
+    p_ctr = v.add_points(np.empty((0, 2)), name='Q = CENTER 中心 (red)',
                          face_color='red', size=4, border_width=0)
-    layers = {'1': p_ctr, '2': p_br, '3': p_end}
+    layers = {'q': p_ctr, 'w': p_br, 'e': p_end}
 
     # on-screen legend (always visible)
     v.text_overlay.visible = True
     v.text_overlay.font_size = 13
     v.text_overlay.color = 'white'
     v.text_overlay.text = (
-        '1=CENTER中心(red)   2=BRANCH分叉(magenta)   3=ENDPOINT(yellow)\n'
+        'Q=CENTER中心(red)   W=BRANCH分叉(magenta)   E=ENDPOINT(yellow)\n'
         'click=add point    d=delete nearest    c=clear all    s=SAVE\n'
         'scroll=zoom   space+drag=pan    (do NOT press Delete — it kills the layer)')
 
@@ -81,7 +82,7 @@ def main():
         lyr.mode = 'add'
         v.status = f'marking: {lyr.name}'
 
-    for kk in ('1', '2', '3'):
+    for kk in ('q', 'w', 'e'):
         v.bind_key(kk, (lambda k: (lambda viewer: activate(k)))(kk), overwrite=True)
 
     def attach_rclick(layer):
@@ -135,7 +136,7 @@ def main():
                     f'branch={rec["counts"]["branch"]} endpoint={rec["counts"]["endpoint"]}')
         print(f'[saved] {fp}  {rec["counts"]}')
 
-    activate('1')  # start on CENTER, add mode
+    activate('q')  # start on CENTER, add mode
     napari.run()
 
 
