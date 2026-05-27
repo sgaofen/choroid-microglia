@@ -1,39 +1,101 @@
-# Results (current pipeline output)
+# Results — choroid-plexus microglia morphology (WT vs HET)
 
-3 images: F_WT_2 = WT/control; F_HET_1, F_HET_3 = HET/disease (Alzheimer's
-model, replicates). All metrics computed on the FULL image. Aggregate metrics
-normalized by foreground (signal) area in mm². Per-segment = each skeleton
-branch between junctions/endpoints. Regional = 400-px (~83 µm) tiles, CV taken
-across tiles as a spatial-heterogeneity measure.
+3 images: F_WT_2 = WT/control; F_HET_1, F_HET_3 = HET (Alzheimer's model,
+two biological replicates of one treatment). 16-bit, ~3168², 0.207 µm/px,
+single Iba1-type channel.
 
-| metric | WT_2 | HET_1 | HET_3 | HET vs WT |
+## TL;DR
+**Whole-image AVERAGES do not separate WT from HET** — the difference is FOCAL,
+so averaging the whole image washes it out. **REGION-based morphotype
+composition does**: HET converts a reproducible fraction of tissue regions to a
+**de-ramified / fragmented** morphotype. The signal is replicated (both HET
+agree), robust to parameters, structural (not a brightness artifact), and
+matches the known **DAM** (disease-associated microglia: fragmented/beaded
+processes) phenotype.
+
+---
+
+## 1. Whole-image aggregate means do NOT separate (the honest negative)
+| metric | WT | HET (mean) | Δ |
+|---|---|---|---|
+| mean segment length | 3.26 µm | 3.20 | −1.8% |
+| mean thickness | 1.84 µm | 1.92 | +4.3% |
+| branch / mm² | 24725 | 23051 | −6.8% |
+| skeleton length / mm² | 577798 | 550803 | −4.7% |
+
+Pooled per-segment distributions are nearly identical (KS D=0.017 for length).
+The means are insensitive because only a SUBSET of regions transform — so we
+move to the region level. (Full table: `aggregate.json`, `wt_vs_het_deltas.json`.)
+
+## 2. Region morphotype composition (the analysis that works)
+Tile each image into 200-px (~41 µm) regions → 6 morphology features per region
+→ k-means into 4 morphotypes → compare COMPOSITION between conditions. The unit
+is the REGION (boundaries are ours, 100% reliable) — NOT per-cell, because
+instance segmentation in this dense tissue is the unsolved problem.
+
+Morphotype profiles (C0 = most ramified → C3 = least):
+| type | branch/mm² | endpoint/branch | thickness | ramification | reading |
+|---|---|---|---|---|---|
+| C0 | 61642 | 0.83 | 2.78 | 13.4 | dense/thick (soma-rich/amoeboid), rare |
+| C1 | 76509 | 1.37 | 1.51 | 12.3 | densely ramified, thin |
+| C2 | 64793 | 1.24 | 1.81 | 12.1 | moderately ramified |
+| **C3** | **52634** | **1.90** | 1.57 | **9.3** | **de-ramified / fragmented (DAM-like)** |
+
+Composition (% of regions, brightness-independent clustering):
+| type | WT | HET_1 | HET_3 | HET−WT |
 |---|---|---|---|---|
-| mean segment length (µm) | 3.26 | 3.17 | 3.23 | −1.8% |
-| median segment length (µm) | 2.57 | 2.46 | 2.50 | −3.5% |
-| p90 segment length (µm) | 6.82 | 6.69 | 6.70 | −1.8% |
-| CV segment length | 0.861 | 0.865 | 0.886 | +1.7% |
-| mean thickness/diameter (µm) | 1.84 | 1.91 | 1.92 | +4.3% |
-| CV thickness | 0.396 | 0.433 | 0.583 | +28.3% |
-| branch points / mm² | 24725 | 21352 | 23750 | −8.8% |
-| endpoints / mm² | 87146 | 94297 | 95255 | +8.8% |
-| skeleton length (µm) / mm² | 577798 | 531911 | 569694 | −4.7% |
-| ramification (branches / 100µm skeleton) | 4.28 | 4.01 | 4.17 | −4.4% |
-| regional CV (skeleton density) | 0.078 | 0.068 | 0.108 | +12.8% |
-| regional CV (thickness) | 0.11 | 0.12 | 0.24 | +63.2% |
+| **C3 (de-ramified)** | **21.4** | **32.3** | **37.9** | **+13.7** |
+| C0 | 1.0 | 3.5 | 8.3 | +4.9 |
+| C1 | 31.8 | 19.2 | 34.0 | (HET disagree) |
+| C2 | 45.8 | 44.9 | 19.9 | (HET disagree) |
 
-## Apparent direction (HET vs WT)
-- **De-ramification**: fewer branch points (−8.8%), lower ramification index
-  (−4.4%), less total skeleton (−4.7%); more endpoints (+8.8%) = more
-  fragmented/terminal tips.
-- **Processes slightly thicker (+4.3%) and more variable (+28% CV)** — possible
-  swelling toward activated/amoeboid.
-- **More spatially heterogeneous** (regional CVs up, thickness regional CV
-  +63%) — consistent with patchy disease response.
-- Segment length itself barely differs (−1.8%).
+Spatial maps (`*_morphotype_map.png`): the de-ramified regions form CONTIGUOUS
+FOCI in both HET (large red patches), but are sparse/scattered in WT — a focal
+disease pattern, not uniform noise.
 
-## Caveats we already know
-- n = 1 WT vs 2 HET images — underpowered; no image-level statistics possible.
-- Per-cell counting is NOT done (dense/touching). These are aggregate +
-  per-segment + regional metrics, deliberately avoiding single-cell segmentation.
-- Binarization is a single global threshold (Otsu×0.7); raising it fragments
-  processes, lowering it floods background — see PROMPT_for_GPT_Pro.md.
+## 3. Replicate-consistency screen (which signals to trust)
+The two HET are replicates of ONE treatment → they must resemble each other. We
+trust a WT-vs-HET signal only if **HET_1 ≈ HET_3 (same side of WT, replicate
+spread < WT gap)**. `replicate_consistency.py` screens every metric. The clean,
+replicated signals ALL lie on one axis — **de-ramification / fragmentation**:
+
+| signal | WT | HET_1 | HET_3 | direction | replicate spread / WT gap |
+|---|---|---|---|---|---|
+| **endpoint/branch ratio (fragmentation)** | 1.30 | 1.52 | 1.55 | ↑ +18% | 0.10 (tightest) |
+| C3 de-ramified % | 21.4 | 32.3 | 37.9 | ↑ | 0.40 |
+| endpoint density / mm² | 89.8k | 98.6k | 104k | ↑ +13% | 0.48 |
+| branch density / mm² | 66.7k | 62.0k | 64.1k | ↓ −5.5% | 0.56 |
+| whole-image endpoint / mm² | 87.1k | 94.3k | 95.3k | ↑ +8.8% | 0.13 |
+
+DROPPED as inconsistent (the two HET disagree): region skeleton-length density,
+region ramification mean, C1/C2 morphotype proportions, regional CV of skeleton
+density.
+
+## 4. Brightness confound — ruled out
+HET regions have ~17% lower foreground coverage (slightly dimmer/sparser).
+(a) Re-clustering with the coverage feature REMOVED still gives de-ramified
+HET enrichment of +13.7 pts. (b) C2 and C3 have nearly identical (low) coverage
+but OPPOSITE branching — only the de-ramified C3 rises in HET, so the
+discriminating axis is structure, not brightness. (c) Low coverage is partly a
+CONSEQUENCE of de-ramification (fewer/shorter branches = less signal area).
+
+## 5. Robustness to parameters
+9 combinations of tile size {31, 41, 62 µm} × k {3, 4, 5}: in **9/9 both HET >
+WT** for the most-fragmented morphotype; strict replicate-consistency holds in
+**7/9** (the 2 misses are only at extreme coarse tiles or over-split k=5, where
+the disease cluster becomes small/unstable). Not a parameter artifact.
+
+## 6. Visual spot-check + biology
+`spot_check_WT_vs_HET.png`: a HET de-ramified region = short, broken, stubby
+fragments with many loose ends; a WT region = long, connected, branched network.
+The eyeball matches the metric, and the fragmented morphology is exactly the
+**DAM** ("half-dead" microglia with broken-up/beaded processes) feature.
+
+## Caveats
+- **n = 3 images** (1 WT, 2 HET); regions within an image are NOT independent
+  (pseudo-replication) → no valid image-level p-values. The METHOD separates the
+  groups, but a hard statistical claim needs more images/animals (≥3/genotype).
+- Single global threshold (Otsu×0.7); faint processes can fragment, which is
+  partially entangled with the fragmentation signal — though replicate
+  agreement + focality + DAM biology argue the signal is real.
+- Per-cell counting deliberately avoided (dense, touching processes).
