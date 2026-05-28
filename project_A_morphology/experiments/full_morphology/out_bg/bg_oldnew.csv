@@ -1,0 +1,9 @@
+metric,normalization,WT,HET_1,HET_3,survives_bg_normalization
+total area (mm2),OLD_otsu,0.0617,0.0532,0.0545,WT higher — survives
+total area (mm2),NEW_bgmatched,0.0445,0.0371,0.033,WT higher — survives
+median cell area (um2),OLD_otsu,23.9,20.6,19.6,FLIPPED — was brightness artifact
+median cell area (um2),NEW_bgmatched,10.6,11.1,14.4,FLIPPED — was brightness artifact
+connectivity %skel in big webs,OLD_otsu,44.3,23.6,30.5,WT higher — survives (stronger)
+connectivity %skel in big webs,NEW_bgmatched,26.8,6.7,5.8,WT higher — survives (stronger)
+endpoint/branch (fragmentation),OLD_otsu,4.373,5.457,4.845,HET higher — survives (cleaner)
+endpoint/branch (fragmentation),NEW_bgmatched,5.245,6.125,6.469,HET higher — survives (cleaner)
