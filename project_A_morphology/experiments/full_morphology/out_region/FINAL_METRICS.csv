@@ -1,0 +1,26 @@
+section,metric,WT,HET_1,HET_3,HET_vs_WT_pct,verdict
+ABUNDANCE,skeleton / tissue-tile mm2,101764.698,77117.22,75788.429,-24.9,✓ CLEAN
+ABUNDANCE,foreground fraction (mean tile),0.139,0.111,0.099,-24.3,✓ CLEAN
+ABUNDANCE,components / image (count),1291,1457,1472,13.4,✓ CLEAN
+SIZE / LENGTH,region mean segment len (um),3.307,3.243,3.481,1.7,✗ disagree
+SIZE / LENGTH,component median len (um),16.97,13.46,12.83,-22.5,✓ CLEAN
+SIZE / LENGTH,component p90 len (um),55.48,34.98,34.16,-37.7,✓ CLEAN
+SIZE / LENGTH,component median span (um),12.53,10.1,10.25,-18.8,✓ CLEAN
+THICKNESS (apparent width),region mean thickness (um),1.289,1.321,1.204,-2.1,✗ disagree
+THICKNESS (apparent width),component mean thickness (um),1.187,1.256,1.17,2.3,✗ disagree
+BRANCHING / COMPLEXITY,branch per 100um skeleton,12.287,11.979,11.31,-5.2,~ same-side
+BRANCHING / COMPLEXITY,mean branches / component,3.146,2.142,2.003,-34.1,✓ CLEAN
+FRAGMENTATION (DAM-like),region endpoint/branch ratio,1.874,2.235,2.372,22.9,✓ CLEAN
+FRAGMENTATION (DAM-like),region endpoint per 100um,22.405,25.852,25.209,14.0,✓ CLEAN
+FRAGMENTATION (DAM-like),fragmentation score (mean),-0.937,0.496,0.405,-148.1,✓ CLEAN
+FRAGMENTATION (DAM-like),% components unbranched (stub),24.09,24.777,23.166,-0.5,✗ disagree
+CONNECTIVITY,% skeleton in >100um components,26.837,6.698,5.826,-76.7,✓ CLEAN
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV thickness across tiles,0.106,0.103,0.102,-3.8,✓ CLEAN
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV seg-len across tiles,0.134,0.157,0.182,26.2,✓ CLEAN
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV branch/100um across tiles,0.151,0.192,0.22,36.0,✓ CLEAN
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),STD fragmentation score (tiles),1.817,1.947,2.433,20.6,~ same-side
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV component length,1.39,1.134,1.037,-21.9,✓ CLEAN
+MORPHOTYPE COMPOSITION,region de-ramified %,5.319,11.735,25.128,246.5,~ same-side
+MORPHOTYPE COMPOSITION,CC small/fragment M0 %,23.703,23.816,22.826,-1.6,✗ disagree
+MORPHOTYPE COMPOSITION,CC large-arbor M3 %,20.991,12.56,12.5,-40.3,✓ CLEAN
+SPATIAL FOCALITY,fragmentation-hotspot tile %,10.106,35.204,29.231,218.8,✓ CLEAN
