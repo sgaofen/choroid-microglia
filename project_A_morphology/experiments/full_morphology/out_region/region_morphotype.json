@@ -16,47 +16,47 @@
    "n_tiles": 188,
    "skel_per_tile_mm2": 101764.698,
    "skel_per_fg_mm2": 746349.574,
-   "branch_per_100um": 2.056,
+   "branch_per_100um": 14.916,
    "endpoint_per_100um": 22.405,
-   "endpoint_branch_ratio": 14.395,
+   "endpoint_branch_ratio": 1.564,
    "mean_thickness_um": 1.289,
    "mean_seg_len_um": 3.307,
-   "frag_score": -0.674,
-   "deram_pct": 13.3,
-   "frag_hotspot_pct": 13.8
+   "frag_score": -1.057,
+   "deram_pct": 8.5,
+   "frag_hotspot_pct": 12.2
   },
   "F_HET_1": {
    "condition": "HET",
    "n_tiles": 196,
    "skel_per_tile_mm2": 77117.22,
    "skel_per_fg_mm2": 705076.93,
-   "branch_per_100um": 1.949,
+   "branch_per_100um": 14.409,
    "endpoint_per_100um": 25.852,
-   "endpoint_branch_ratio": 16.339,
+   "endpoint_branch_ratio": 1.869,
    "mean_thickness_um": 1.321,
    "mean_seg_len_um": 3.243,
-   "frag_score": 0.444,
-   "deram_pct": 23.0,
-   "frag_hotspot_pct": 32.7
+   "frag_score": 0.453,
+   "deram_pct": 17.9,
+   "frag_hotspot_pct": 31.6
   },
   "F_HET_3": {
    "condition": "HET",
    "n_tiles": 195,
    "skel_per_tile_mm2": 75788.429,
    "skel_per_fg_mm2": 783364.954,
-   "branch_per_100um": 1.701,
+   "branch_per_100um": 13.182,
    "endpoint_per_100um": 25.209,
-   "endpoint_branch_ratio": 17.316,
+   "endpoint_branch_ratio": 2.022,
    "mean_thickness_um": 1.204,
    "mean_seg_len_um": 3.481,
-   "frag_score": 0.203,
-   "deram_pct": 23.1,
-   "frag_hotspot_pct": 28.2
+   "frag_score": 0.564,
+   "deram_pct": 30.3,
+   "frag_hotspot_pct": 30.8
   }
  },
  "coverage_inclusive_deram_pct": {
-  "F_WT_2": 12.2,
-  "F_HET_1": 19.4,
-  "F_HET_3": 20.0
+  "F_WT_2": 4.8,
+  "F_HET_1": 14.8,
+  "F_HET_3": 26.7
  }
 }

@@ -87,42 +87,20 @@ def break_loops(sk, raw_norm, max_hole=60):
     return sk
 
 
-def merged_branches(sk, merge_radius=3, min_arms=3):
-    """One point per REAL junction, where a real junction has >= min_arms (3)
-    distinct skeleton arms leaving it (Stephen's rule, 2026-05-27 & 05-28: a
-    branch must have >=3 paths; a path's last point is an ENDPOINT, never a
-    branch). Two-step so SHORT arms are NOT eaten:
-      1. GROUP nearby junction pixels into one node (dilate by merge_radius only
-         to fuse 'branch after branch' clusters that are really one junction).
-      2. COUNT arms by removing ONLY the actual junction pixels (not the dilated
-         blob), labelling the rest, and counting distinct components 8-adjacent
-         to those pixels. Removing only the junction pixels (vs the fat blob)
-         means an arm a few px long still survives to be counted."""
-    d = degree(sk)
-    jp = sk & (d >= 3)                                   # actual junction pixels
-    grp = binary_dilation(jp, iterations=merge_radius)   # group nearby ones into nodes
-    l, nn = ndi.label(grp, structure=np.ones((3, 3)))
-    out = []
-    pad = merge_radius + 2
-    objs = ndi.find_objects(l)
-    H, W = sk.shape
-    for i, sl in enumerate(objs, start=1):
-        if sl is None:
-            continue
-        y0 = max(0, sl[0].start - pad); y1 = min(H, sl[0].stop + pad)
-        x0 = max(0, sl[1].start - pad); x1 = min(W, sl[1].stop + pad)
-        node = (l[y0:y1, x0:x1] == i)
-        skl = sk[y0:y1, x0:x1]
-        jpl = jp[y0:y1, x0:x1] & node                    # the junction pixels of this node
-        rest = skl & ~jpl                                # remove ONLY junction px, keep short arms
-        rl, _ = ndi.label(rest, structure=np.ones((3, 3)))
-        touch = rl[binary_dilation(jpl, iterations=1) & rest]
-        n_arms = len(np.unique(touch[touch > 0]))
-        if n_arms >= min_arms:
-            ys, xs = np.where(jpl)
-            if len(ys):
-                out.append((ys.mean() + y0, xs.mean() + x0))
-    return np.array(out) if out else np.empty((0, 2))
+def merged_branches(sk):
+    """A junction = a skeleton pixel with degree >= 3 (>=3 lines meeting). On a
+    1-px pruned skeleton that IS the definition (Stephen, 2026-05-28). Directly-
+    adjacent (8-connected) junction pixels are the same physical junction, so
+    count = number of 8-connected components of the degree>=3 mask; return one
+    centroid per component. NO dilation-merge and NO arm-count validation — both
+    were over-engineering that massively under-counted (18 vs the correct ~125
+    on a WT crop). Spurs are already removed by prune_spurs upstream, so degree>=3
+    pixels are real junctions."""
+    jp = sk & (degree(sk) >= 3)
+    l, n = ndi.label(jp, structure=np.ones((3, 3)))
+    if n == 0:
+        return np.empty((0, 2))
+    return np.array(ndi.center_of_mass(jp, l, range(1, n + 1)))
 
 
 def endpoints(sk):
