@@ -81,7 +81,7 @@ fr_all = np.array([float(r['frag_score']) for r in reg])  # used by dashboard ho
 TOTAL_AREA = {}
 for s in STEMS:
     raw = tifffile.imread(pl.find_raw(s)).astype(np.float32)
-    b = pl.segment(pl.normalize(raw), 'otsu07')
+    b = pl.segment(pl.normalize(raw), 'bg', raw=raw)   # bg-normalized, consistent with rest of dashboard
     TOTAL_AREA[s] = b.sum() * pl.PIXEL_UM ** 2 / 1e6
     print(f'{s} whole-image total Iba1 area = {TOTAL_AREA[s]:.4f} mm2')
 

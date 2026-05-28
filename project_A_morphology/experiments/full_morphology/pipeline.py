@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import tifffile
 from scipy import ndimage as ndi
+from scipy.ndimage import white_tophat
 from skimage import filters, morphology
 from skan import Skeleton, summarize
 
@@ -34,8 +35,18 @@ def normalize(raw, p_lo=1.0, p_hi=99.5):
     return np.clip((raw - lo) / (hi - lo + 1e-9), 0, 1)
 
 
-def segment(norm, method='otsu07'):
-    """Binarize a normalized image with a chosen method (P4 sensitivity)."""
+def segment(norm, method='bg', raw=None):
+    """Binarize. Default 'bg' = rolling-ball background subtraction on the RAW
+    image (per Huixin: make empty space equally black across images BEFORE
+    thresholding, removing the acquisition-brightness confound) + otsu*0.7.
+    Other methods kept for the P4 segmentation-sensitivity comparison."""
+    if method == 'bg':
+        src = raw if raw is not None else norm
+        th = white_tophat(filters.gaussian(src, 1.0), size=31)
+        b = th > filters.threshold_otsu(th) * 0.7
+        b = morphology.binary_closing(b, morphology.disk(2))
+        b = morphology.remove_small_objects(b, 20)
+        return b
     sm = filters.gaussian(norm, 1.0)
     if method == 'otsu07':
         b = sm > filters.threshold_otsu(sm) * 0.7
@@ -63,17 +74,16 @@ def clean_skel(raw_skel, norm, spur=8):
     return sk
 
 
-def prep(stem, method='otsu07'):
-    """Return norm, binary, dist, cleaned skeleton. For the default otsu07 the
-    established v29 skeleton is reused; other methods are re-skeletonized."""
+def prep(stem, method='bg'):
+    """Return norm, binary, dist, cleaned skeleton. Default baseline is now the
+    background-normalized segmentation (Huixin's brightness correction), always
+    re-skeletonized from THIS segmentation (the old v29 skeleton came from the
+    acquisition-confounded otsu07 and must not be reused)."""
     raw = tifffile.imread(find_raw(stem)).astype(np.float32)
     norm = normalize(raw)
-    binary = segment(norm, method)
+    binary = segment(norm, method, raw=raw)
     dist = ndi.distance_transform_edt(binary)
-    if method == 'otsu07':
-        raw_skel = np.load(V29 / f'{stem}_skel_pruned.npy').astype(bool)
-    else:
-        raw_skel = morphology.skeletonize(binary)
+    raw_skel = morphology.skeletonize(binary)
     skel = clean_skel(raw_skel, norm)
     return norm, binary, dist, skel
 

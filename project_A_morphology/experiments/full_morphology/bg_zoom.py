@@ -69,9 +69,9 @@ for row, s in enumerate(['F_WT_2', 'F_HET_1']):
     ys, xs = np.where(sc); ax[row, 1].scatter(xs, ys, s=0.5, c='#ff3b3b', marker='.')
     ey, ex = np.where(sc & (deg == 1))
     ax[row, 1].scatter(ex, ey, s=10, c='yellow', edgecolors='k', linewidths=0.3)
-    bp = ndi.binary_dilation(sc & (deg >= 3), iterations=3); bl, bn = ndi.label(bp)
-    for i in range(1, bn + 1):
-        yy, xx = np.where(bl == i); ax[row, 1].scatter(xx.mean(), yy.mean(), s=20, c='lime', edgecolors='k', linewidths=0.3)
+    J = ct.merged_branches(sc)                       # validated >=3-arm branches only
+    if len(J):
+        ax[row, 1].scatter(J[:, 1], J[:, 0], s=20, c='lime', edgecolors='k', linewidths=0.3)
     ax[row, 1].axis('off'); ax[row, 1].set_title('skeleton(red)+branch(green)+endpoint(yellow)', fontsize=11)
     # col2 connectivity coloring
     rgb = label2rgb(ndi.grey_dilation(lc, size=3), bg_label=0, bg_color=(0.05, 0.05, 0.05))
