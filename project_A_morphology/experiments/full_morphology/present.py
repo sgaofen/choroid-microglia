@@ -75,28 +75,21 @@ fig.suptitle('Connectivity: WT = few large connected webs · HET = many small br
 fig.tight_layout(); fig.savefig(OUT/'story_connectivity.png', dpi=115, bbox_inches='tight'); plt.close()
 print('saved story_connectivity.png')
 
-# ============ (B) fragmentation spatial heatmap ============
-fr_all = np.array([float(r['frag_score']) for r in reg])
-vmin, vmax = np.percentile(fr_all, 2), np.percentile(fr_all, 98)
-fig, ax = plt.subplots(1, 3, figsize=(16, 6))
-for i, s in enumerate(STEMS):
-    rows = [r for r in reg if r['image'] == s]
-    ntY = max(int(r['ty']) for r in rows)//TILE + 1
-    ntX = max(int(r['tx']) for r in rows)//TILE + 1
-    g = np.full((ntY, ntX), np.nan)
-    for r in rows:
-        g[int(r['ty'])//TILE, int(r['tx'])//TILE] = float(r['frag_score'])
-    im = ax[i].imshow(g, cmap='inferno', vmin=vmin, vmax=vmax)
-    ax[i].set_title(f'{s} ({COND[s]})', fontsize=13); ax[i].axis('off')
-fig.colorbar(im, ax=ax, fraction=0.025, label='fragmentation score (bright = more fragmented)')
-fig.suptitle('Where the fragmentation is: WT cool & uniform · HET bright focal patches', fontsize=14)
-fig.savefig(OUT/'story_frag_heatmap.png', dpi=120, bbox_inches='tight'); plt.close()
-print('saved story_frag_heatmap.png')
+# ============ (B) whole-image total Iba1+ area (per Stephen) ============
+import tifffile
+fr_all = np.array([float(r['frag_score']) for r in reg])  # used by dashboard hotspot panel
+TOTAL_AREA = {}
+for s in STEMS:
+    raw = tifffile.imread(pl.find_raw(s)).astype(np.float32)
+    b = pl.segment(pl.normalize(raw), 'otsu07')
+    TOTAL_AREA[s] = b.sum() * pl.PIXEL_UM ** 2 / 1e6
+    print(f'{s} whole-image total Iba1 area = {TOTAL_AREA[s]:.4f} mm2')
 
 # ============ (C) dashboard of clean dimensions ============
 def cc_pct_large(s):
     L = Acsv(cc, s, 'length_um'); return 100*L[L > 100].sum()/L.sum()
 panels = [
+    ('whole-image total Iba1 area (mm2)', lambda s: TOTAL_AREA[s], 'larger in WT (~teens %)'),
     ('process abundance\n(skeleton / tissue area)', lambda s: Acsv(reg, s, 'skel_per_tile_mm2').mean()/1000, 'less in HET'),
     ('branching\n(branches / 100um)', lambda s: Acsv(reg, s, 'branch_per_100um').mean(), 'less in HET'),
     ('fragmentation score', lambda s: Acsv(reg, s, 'frag_score').mean(), 'more in HET'),
@@ -106,14 +99,14 @@ panels = [
     ('de-ramified regions %', lambda s: 100*(Acsv(reg, s, 'cluster') == 3).mean(), 'more in HET'),
     ('fragmentation hotspots %', lambda s: 100*(Acsv(reg, s, 'frag_score') > np.percentile(fr_all, 75)).mean(), 'more in HET'),
 ]
-fig, axes = plt.subplots(2, 4, figsize=(17, 8))
+fig, axes = plt.subplots(3, 3, figsize=(15, 12))
 colors = ['#2c7bb6', '#d7191c', '#fd8d3c']
 for ax_, (title, fn, tag) in zip(axes.ravel(), panels):
     vals = [fn(s) for s in STEMS]
     ax_.bar(['WT', 'HET_1', 'HET_3'], vals, color=colors)
     ax_.set_title(f'{title}\n({tag})', fontsize=10.5)
     for j, v in enumerate(vals):
-        ax_.text(j, v, f'{v:.1f}', ha='center', va='bottom', fontsize=9)
+        ax_.text(j, v, f'{v:.3g}', ha='center', va='bottom', fontsize=9)
     ax_.margins(y=0.18)
 fig.suptitle('All clean dimensions: both HET replicates agree, both differ from WT', fontsize=14)
 fig.tight_layout(); fig.savefig(OUT/'story_dashboard.png', dpi=115, bbox_inches='tight'); plt.close()
