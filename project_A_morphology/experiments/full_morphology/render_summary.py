@@ -18,62 +18,8 @@ import clean_topology as ct
 OUT = pl.ROOT / 'experiments/full_morphology/out_region'
 CACHE = pl.ROOT / 'experiments/full_morphology/cache_bg'
 
-# ---------- (A) curated stats table ----------
-# (section, metric, WT, HET_1, HET_3, pctdiff, verdict, plain meaning)
-ROWS = [
- ('AMOUNT', 'skeleton length / tissue area', 102000, 77100, 75800, -25, 'CLEAN', 'less process material'),
- ('CONNECTIVITY', '% skeleton in >100um networks', 26.8, 6.7, 5.8, -77, 'CLEAN', 'big connected webs collapse'),
- ('CONNECTIVITY', '% skeleton in 256um+ giant nets', 4.64, 1.0, 0.0, -89, 'CLEAN', 'giant networks vanish'),
- ('CONNECTIVITY', 'Gini of piece sizes', 0.546, 0.468, 0.442, -17, 'CLEAN', "WT's size inequality = giants HET lacks"),
- ('SIZE', 'pieces / mm2 tissue', 29013, 39258, 44582, +44, 'CLEAN', 'broken into more pieces'),
- ('SIZE', '% skeleton in 8-16um fragments', 8.1, 20.3, 24.1, +175, 'CLEAN', 'mass piles into small fragments'),
- ('SIZE', 'median piece length (um)', 17.0, 13.5, 12.8, -23, 'CLEAN', 'pieces shorter'),
- ('SIZE', 'p90 piece length (um)', 55.5, 35.0, 34.2, -38, 'CLEAN', 'largest pieces shrink most'),
- ('BRANCHING', 'junctions / mm2 tissue', 1367, 928, 879, -34, 'CLEAN', 'fewer branch points'),
- ('BRANCHING', '% internal (jct-jct) segments', 41.3, 34.1, 31.8, -20, 'CLEAN', 'fewer internal connectors'),
- ('BRANCHING', '% 4-way junctions', 31.6, 29.3, 26.7, -11, 'CLEAN', 'loses high-order crossings -> simpler'),
- ('FRAGMENTATION', 'endpoint : junction ratio', 12.3, 16.5, 16.7, +34, 'CLEAN', 'more free dead-ends per junction'),
- ('FRAGMENTATION', 'terminal : internal segment ratio', 1.36, 1.82, 2.02, +41, 'CLEAN', 'arbor becomes dead-end-heavy'),
- ('SPATIAL', 'endpoint/junction @ tissue EDGE', 8.57, 12.1, 12.7, +45, 'CLEAN', 'worst at the edge (WT edge is intact)'),
- ('SPATIAL', 'largest fragmentation hotspot (tiles)', 7, 48, 40, +529, 'CLEAN', 'damage clusters into one big patch'),
- ('SPATIAL', 'hotspot patch dominance', 0.32, 0.69, 0.73, +122, 'CLEAN', 'focal, not uniform'),
- ('NOT CLEAN', 'median segment length (um)', 2.57, 2.55, 2.50, -1, 'null', 'processes NOT shorter (topology-only)'),
- ('NOT CLEAN', 'mean apparent thickness (um)', 1.29, 1.32, 1.20, -2, 'null', 'processes NOT thinner (HET replicates disagree)'),
-]
-SEC_COL = {'AMOUNT': '#1f78b4', 'CONNECTIVITY': '#33a02c', 'SIZE': '#ff7f00',
-           'BRANCHING': '#6a3d9a', 'FRAGMENTATION': '#e31a1c', 'SPATIAL': '#b15928', 'NOT CLEAN': '#7f7f7f'}
 
-fig, ax = plt.subplots(figsize=(15, 11)); ax.axis('off')
-xcols = [0.005, 0.40, 0.515, 0.60, 0.685, 0.775, 0.86]   # metric, WT, H1, H3, diff, verdict, meaning
-heads = ['metric', 'WT', 'HET_1', 'HET_3', 'HETvWT', 'verdict', 'plain meaning']
-n = len(ROWS); top = 0.95; dy = top / (n + 3)
-for xc, h in zip(xcols, heads):
-    ax.text(xc, top, h, fontsize=11, fontweight='bold', va='top')
-ax.plot([0, 1], [top-0.012, top-0.012], color='k', lw=1.2)
-y = top - dy
-last_sec = None
-for sec, name, wt, h1, h3, d, verd, mean in ROWS:
-    if sec != last_sec:
-        ax.add_patch(plt.Rectangle((0, y-dy*0.18), 1, dy*0.92, color=SEC_COL[sec], alpha=0.13, zorder=0))
-        ax.text(0.005, y, f'{sec}', fontsize=9.5, fontweight='bold', color=SEC_COL[sec], va='center')
-        last_sec = sec
-    yy = y - dy*0.42 if sec else y
-    fmt = lambda v: (f'{v:,.0f}' if abs(v) >= 100 else (f'{v:.2f}' if abs(v) < 10 else f'{v:.1f}'))
-    ax.text(xcols[0]+0.10, yy, name, fontsize=9.3, va='center')
-    for xc, v in zip(xcols[1:4], (wt, h1, h3)):
-        ax.text(xc, yy, fmt(v), fontsize=9.3, va='center')
-    dcol = '#7f7f7f' if verd == 'null' else ('#c0392b' if d > 0 else '#16609a')
-    ax.text(xcols[4], yy, f'{d:+d}%', fontsize=9.3, va='center', color=dcol, fontweight='bold')
-    vcol = '#2ca02c' if verd == 'CLEAN' else '#999999'
-    ax.text(xcols[5], yy, '✓ clean' if verd == 'CLEAN' else 'null', fontsize=9, va='center', color=vcol, fontweight='bold')
-    ax.text(xcols[6], yy, mean, fontsize=8.4, va='center', color='#333333')
-    y -= dy
-ax.set_xlim(0, 1); ax.set_ylim(0, 1)
-ax.set_title('WT vs HET microglia morphology — multi-angle statistics (background-normalized, fixed branch detection)\n'
-             '3 images (1 WT, 2 HET replicates); every CLEAN row: both HET replicates on the same side of WT. Demo, descriptive.',
-             fontsize=12, loc='left')
-fig.savefig(OUT / 'stats_table.png', dpi=130, bbox_inches='tight'); plt.close()
-print('saved stats_table.png')
+# (table moved to render_table_clean.py — this file now only makes verify_crop)
 
 # ---------- (B) visual verification crop ----------
 WIN = 380

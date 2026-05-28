@@ -87,20 +87,58 @@ def break_loops(sk, raw_norm, max_hole=60):
     return sk
 
 
-def merged_branches(sk):
+def merged_branches(sk, merge_um=3.0, pixel_um=0.207):
     """A junction = a skeleton pixel with degree >= 3 (>=3 lines meeting). On a
     1-px pruned skeleton that IS the definition (Stephen, 2026-05-28). Directly-
-    adjacent (8-connected) junction pixels are the same physical junction, so
-    count = number of 8-connected components of the degree>=3 mask; return one
-    centroid per component. NO dilation-merge and NO arm-count validation — both
-    were over-engineering that massively under-counted (18 vs the correct ~125
-    on a WT crop). Spurs are already removed by prune_spurs upstream, so degree>=3
-    pixels are real junctions."""
+    adjacent (8-connected) junction pixels are one junction. Additionally, two
+    junctions joined by a skeleton segment SHORTER than merge_um are merged into
+    one point — this collapses 'branch-after-branch' (several sub-branches
+    emerging within one small branching area, a few px apart) into a single
+    junction, per Stephen's request (2026-05-28). Merge is PATH-based (along the
+    skeleton), so it never fuses junctions of different processes that merely lie
+    close in straight-line distance. merge_um=3 chosen visually; the HET/WT
+    junction ratio is unchanged across merge_um in [0,5] so it does not affect the
+    WT-vs-HET conclusion. NO arm-count validation (that over-pruned)."""
     jp = sk & (degree(sk) >= 3)
-    l, n = ndi.label(jp, structure=np.ones((3, 3)))
-    if n == 0:
+    jl, nj = ndi.label(jp, structure=np.ones((3, 3)))
+    if nj == 0:
         return np.empty((0, 2))
-    return np.array(ndi.center_of_mass(jp, l, range(1, n + 1)))
+    cents = list(ndi.center_of_mass(jp, jl, range(1, nj + 1)))
+    if merge_um <= 0:
+        return np.array(cents)
+    seg = sk & ~jp
+    sl, ns = ndi.label(seg, structure=np.ones((3, 3)))
+    if ns == 0:
+        return np.array(cents)
+    seg_px = np.bincount(sl.ravel())[1:]
+    short = np.where(seg_px * pixel_um < merge_um)[0] + 1   # only short segments can merge
+    objs = ndi.find_objects(sl)
+    parent = list(range(nj + 1))
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]; a = parent[a]
+        return a
+
+    H, W = sk.shape
+    for si in short:
+        sb = objs[si - 1]
+        if sb is None:
+            continue
+        y0 = max(0, sb[0].start - 2); y1 = min(H, sb[0].stop + 2)
+        x0 = max(0, sb[1].start - 2); x1 = min(W, sb[1].stop + 2)
+        mask = (sl[y0:y1, x0:x1] == si)
+        sub_jl = jl[y0:y1, x0:x1]
+        adj = np.unique(sub_jl[binary_dilation(mask, iterations=1) & (sub_jl > 0)])
+        adj = adj[adj > 0]
+        for k in adj[1:]:
+            parent[find(int(k))] = find(int(adj[0]))
+    groups = {}
+    for ji in range(1, nj + 1):
+        groups.setdefault(find(ji), []).append(ji)
+    out = [(np.mean([cents[m-1][0] for m in g]), np.mean([cents[m-1][1] for m in g]))
+           for g in groups.values()]
+    return np.array(out)
 
 
 def endpoints(sk):
