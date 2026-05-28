@@ -18,7 +18,7 @@ from pipeline import COND
 import clean_topology as ct
 OUT = pl.ROOT / 'experiments/full_morphology/out_bg'
 TOPHAT = 31
-WIN = 650
+WIN = 400
 
 
 def bg_prep(stem):
@@ -33,29 +33,25 @@ def bg_prep(stem):
     return norm, skel, lab
 
 
-def pick_window(skel, want):
-    """Representative window with enough signal: WT='low' = most connected
-    (lowest local endpoint/branch), HET='high' = most fragmented."""
-    deg = ct.degree(skel); H, W = skel.shape
-    best, bv = (0, 0), (np.inf if want == 'low' else -np.inf)
-    for ty in range(0, H - WIN, 250):
-        for tx in range(0, W - WIN, 250):
-            sc = skel[ty:ty+WIN, tx:tx+WIN]
-            if sc.sum() < 2500:                 # skip near-empty windows
-                continue
-            dc = deg[ty:ty+WIN, tx:tx+WIN]
-            r = (sc & (dc == 1)).sum() / max((sc & (dc >= 3)).sum(), 1)
-            if (want == 'low' and r < bv) or (want == 'high' and r > bv):
-                bv, best = r, (ty, tx)
+def pick_window(binary):
+    """Densest window (most foreground) — compare WT vs HET at matched HIGH
+    density so the contrast is structural, not 'WT happened to be emptier'."""
+    H, W = binary.shape; best, bn = (0, 0), -1
+    for ty in range(0, H - WIN, 150):
+        for tx in range(0, W - WIN, 150):
+            c = binary[ty:ty+WIN, tx:tx+WIN].sum()
+            if c > bn:
+                bn, best = c, (ty, tx)
     return best
 
 
 fig, ax = plt.subplots(2, 3, figsize=(16, 11))
-LABEL = {'F_WT_2': ('low', 'a connected region'), 'F_HET_1': ('high', 'a fragmented region')}
 for row, s in enumerate(['F_WT_2', 'F_HET_1']):
     norm, skel, lab = bg_prep(s)
-    want, reglabel = LABEL[s]
-    ty, tx = pick_window(skel, want)
+    reglabel = 'densest region'
+    raw = tifffile.imread(pl.find_raw(s)).astype(np.float32)
+    binary = pl.segment(pl.normalize(raw), 'bg', raw=raw)
+    ty, tx = pick_window(binary)
     rc = norm[ty:ty+WIN, tx:tx+WIN]
     sc = skel[ty:ty+WIN, tx:tx+WIN]
     lc = lab[ty:ty+WIN, tx:tx+WIN]
