@@ -60,3 +60,9 @@ Thumbs.db
 # External reference repos cloned alongside the project (restore with git clone)
 project_B_stabilization/references/Shipley2020/
 F_*_segments.csv
+
+# Showcase figures for the public README (exception to the *.png / data ignores)
+!docs/
+!docs/figures/
+!docs/figures/*.png
+!docs/figures/*.csv
