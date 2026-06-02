@@ -95,11 +95,9 @@ def tile_rows(stem):
     return rows, (J, E, skel.shape)
 
 
-def verdict(wt, h1, h3):
-    d1, d3 = h1 - wt, h3 - wt
-    same = (d1 > 0) == (d3 > 0)
-    gap = (abs(d1) + abs(d3)) / 2; spread = abs(d1 - d3)
-    return '✓ CLEAN' if (same and spread < gap) else ('~ same-side' if same else '✗ HET disagree')
+def verdict(vals):
+    """vals: dict stem->value (any number of WT/HET images)."""
+    return pl.group_verdict(vals)[0]
 
 
 def main():
@@ -165,10 +163,11 @@ def main():
         summ[s]['deram_pct'] = round(100 * float(np.mean([lab[i] == deram for i in idx])), 1)
         summ[s]['frag_hotspot_pct'] = round(100 * float(np.mean([all_rows[i]['frag_score'] > frag_hi for i in idx])), 1)
 
-    print(f'{"metric":>22}{"WT":>10}{"HET_1":>10}{"HET_3":>10}{"verdict":>16}')
+    print(f'{"metric":>22}{("  ".join(STEMS)):>34}{"verdict":>16}')
     for m in cols + ['deram_pct', 'frag_hotspot_pct']:
-        wt, h1, h3 = summ['F_WT_2'][m], summ['F_HET_1'][m], summ['F_HET_3'][m]
-        print(f'{m:>22}{wt:>10}{h1:>10}{h3:>10}{verdict(wt, h1, h3):>16}')
+        vals = {s: summ[s][m] for s in STEMS}
+        cells = '  '.join(f'{vals[s]:.4g}' for s in STEMS)
+        print(f'{m:>22}{cells:>34}{verdict(vals):>16}')
 
     # ---- coverage-inclusive sensitivity clustering (P2: labelled separately) ----
     Xc = np.array([[r[k] for k in SHAPE] + [r['fg_fraction'], r['skel_per_tile_mm2']]
@@ -182,8 +181,7 @@ def main():
         idx = [i for i, x in enumerate(all_rows) if x['image'] == s]
         sens[s] = round(100 * float(np.mean([labc[i] == K-1 for i in idx])), 1)
     print('\n=== sensitivity: coverage-INCLUSIVE clustering, de-ramified %% (should still be HET>WT) ===')
-    print(f'   WT={sens["F_WT_2"]}  HET_1={sens["F_HET_1"]}  HET_3={sens["F_HET_3"]}  '
-          f'{verdict(sens["F_WT_2"], sens["F_HET_1"], sens["F_HET_3"])}')
+    print('   ' + '  '.join(f'{s}={sens[s]}' for s in STEMS) + f'   {verdict(sens)}')
 
     # ---- save ----
     with open(OUT / 'region_features.csv', 'w', newline='') as f:
@@ -217,7 +215,7 @@ def main():
     # ---- composition bar + fragmentation distribution ----
     plt.figure(figsize=(7, 5))
     x = np.arange(K); width = 0.35
-    wtp = [100*np.mean([lab[i]==k for i,r in enumerate(all_rows) if r['image']=='F_WT_2']) for k in range(K)]
+    wtp = [100*np.mean([lab[i]==k for i,r in enumerate(all_rows) if r['condition']=='WT']) for k in range(K)]
     hetp = [100*np.mean([lab[i]==k for i,r in enumerate(all_rows) if r['condition']=='HET']) for k in range(K)]
     plt.bar(x-width/2, wtp, width, label='WT', color='C0')
     plt.bar(x+width/2, hetp, width, label='HET', color='C3')
@@ -226,8 +224,9 @@ def main():
     plt.savefig(OUT / 'composition_bar.png', dpi=120, bbox_inches='tight'); plt.close()
 
     plt.figure(figsize=(8, 5))
-    for s, c in [('F_WT_2', 'C0'), ('F_HET_1', 'C3'), ('F_HET_3', 'C1')]:
+    for s in STEMS:
         v = [r['frag_score'] for r in all_rows if r['image'] == s]
+        c = 'C0' if COND[s] == 'WT' else 'C3'
         plt.hist(v, bins=np.linspace(frag.min(), frag.max(), 30), density=True,
                  histtype='step', lw=2, label=f'{s}({COND[s]})', color=c)
     plt.axvline(frag_hi, ls='--', c='k', lw=1, label='hotspot thr (pooled p75)')

@@ -68,11 +68,9 @@ def components(stem):
     return rows, fg_mm2, (lab, skel.shape)
 
 
-def verdict(wt, h1, h3):
-    d1, d3 = h1-wt, h3-wt
-    same = (d1 > 0) == (d3 > 0)
-    gap = (abs(d1)+abs(d3))/2; spread = abs(d1-d3)
-    return '✓ CLEAN' if (same and spread < gap) else ('~ same-side' if same else '✗ HET disagree')
+def verdict(vals):
+    """vals: dict stem->value (any number of WT/HET images)."""
+    return pl.group_verdict(vals)[0]
 
 
 def main():
@@ -96,10 +94,11 @@ def main():
                        p90_len_um=round(float(np.percentile(L, 90)), 2),
                        pct_skel_in_large=round(100*L[L > CLUMP_UM].sum()/L.sum(), 1),
                        mean_ep_br=round(float(np.mean([x['endpoint_branch_ratio'] for x in r])), 3))
-    print(f'{"metric":>20}{"WT":>10}{"HET_1":>10}{"HET_3":>10}{"verdict":>16}')
+    print(f'{"metric":>20}{("  ".join(STEMS)):>34}{"verdict":>16}')
     for m in ['comp_per_fg_mm2', 'pct_stub', 'median_len_um', 'p90_len_um', 'pct_skel_in_large', 'mean_ep_br']:
-        wt, h1, h3 = summ['F_WT_2'][m], summ['F_HET_1'][m], summ['F_HET_3'][m]
-        print(f'{m:>20}{wt:>10}{h1:>10}{h3:>10}{verdict(wt, h1, h3):>16}')
+        vals = {s: summ[s][m] for s in STEMS}
+        cells = '  '.join(f'{vals[s]:.4g}' for s in STEMS)
+        print(f'{m:>20}{cells:>34}{verdict(vals):>16}')
 
     # ---- morphotype clustering (shape; component size IS morphology here) ----
     X = np.array([[r[k] for k in SHAPE] for r in all_rows], float)
@@ -121,15 +120,16 @@ def main():
               f'thick={f("thickness_um"):.2f} stub%={100*np.mean([all_rows[i]["is_stub"] for i in np.where(m)[0]]):.0f}')
 
     print('\n=== morphotype composition (% of components) ===')
-    print(f'{"morphotype":>10}{"WT":>8}{"HET_1":>8}{"HET_3":>8}{"verdict":>16}')
+    print(f'{"morphotype":>10}{("  ".join(STEMS)):>34}{"verdict":>16}')
     comp = {}
     for k in range(K):
         def pct(s):
             idx = [i for i, r in enumerate(all_rows) if r['image'] == s]
             return round(100*float(np.mean([lab[i] == k for i in idx])), 1)
-        wt, h1, h3 = pct('F_WT_2'), pct('F_HET_1'), pct('F_HET_3')
-        comp[f'M{k}'] = dict(WT=wt, HET_1=h1, HET_3=h3)
-        print(f'{"M"+str(k):>10}{wt:>8}{h1:>8}{h3:>8}{verdict(wt, h1, h3):>16}')
+        vals = {s: pct(s) for s in STEMS}
+        comp[f'M{k}'] = vals
+        cells = '  '.join(f'{vals[s]:.4g}' for s in STEMS)
+        print(f'{"M"+str(k):>10}{cells:>34}{verdict(vals):>16}')
 
     # ---- save ----
     with open(OUT / 'cc_features.csv', 'w', newline='') as f:
@@ -145,7 +145,8 @@ def main():
     # ---- size distribution ----
     plt.figure(figsize=(9, 5))
     bins = np.logspace(np.log10(2), np.log10(max(r['length_um'] for r in all_rows)+1), 40)
-    for s, c in [('F_WT_2', 'C0'), ('F_HET_1', 'C3'), ('F_HET_3', 'C1')]:
+    for s in STEMS:
+        c = 'C0' if COND[s] == 'WT' else 'C3'
         L = [r['length_um'] for r in all_rows if r['image'] == s]
         plt.hist(L, bins=bins, density=True, histtype='step', lw=2, label=f'{s}({COND[s]})', color=c)
     plt.xscale('log'); plt.xlabel('connected-component skeleton length (um)'); plt.ylabel('density')

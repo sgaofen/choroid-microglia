@@ -1,0 +1,14 @@
+# Project A — choroid-plexus microglia morphology pipeline
+# Install:  pip install -r requirements.txt   (Python 3.10+)
+# These are the only packages the full_morphology pipeline needs.
+numpy>=1.26
+scipy>=1.11
+scikit-image>=0.22
+scikit-learn>=1.3
+tifffile>=2024.1
+skan>=0.11
+matplotlib>=3.8
+pillow>=10.0
+# Versions this was developed against (2026-06): numpy 2.4.3, scipy 1.17.1,
+# scikit-image 0.26.0, scikit-learn 1.8.0, tifffile 2026.3.3, skan 0.13.1,
+# matplotlib 3.10.8, pillow 12.2.0

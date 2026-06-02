@@ -1,26 +1,20 @@
 """All-dimensions summary from the corrected data (region + cc + aggregate).
 Central tendency AND within-image spread (heterogeneity), with the replicate
 verdict for each. CSV-only, no image processing."""
-import csv, json
+import sys, csv
 from pathlib import Path
 import numpy as np
+sys.path.insert(0, str(Path(__file__).parent))
+import pipeline as pl
+from pipeline import STEMS, COND, WT, HET   # auto-discovered from data/raw
 
-FM = Path('/Users/stephenyu/choroid-microglia/project_A_morphology/experiments/full_morphology')
+FM = pl.ROOT / 'experiments/full_morphology'
 reg = list(csv.DictReader(open(FM/'out_region/region_features.csv')))
 cc = list(csv.DictReader(open(FM/'out_cc/cc_features.csv')))
-STEMS = ['F_WT_2', 'F_HET_1', 'F_HET_3']
-COND = {'F_WT_2': 'WT', 'F_HET_1': 'HET', 'F_HET_3': 'HET'}
 
 
 def A(rows, img, key):
     return np.array([float(r[key]) for r in rows if r['image'] == img])
-
-
-def verdict(wt, h1, h3):
-    d1, d3 = h1-wt, h3-wt
-    same = (d1 > 0) == (d3 > 0)
-    gap = (abs(d1)+abs(d3))/2; spread = abs(d1-d3)
-    return '✓ CLEAN' if (same and spread < gap and gap > 0) else ('~ same-side' if same else '✗ disagree')
 
 
 _csv_rows = []
@@ -28,12 +22,14 @@ _section = ['']
 
 
 def row(label, fn):
-    v = [fn(s) for s in STEMS]
-    vd = verdict(*v)
-    print(f'{label:<34}{v[0]:>10.3g}{v[1]:>10.3g}{v[2]:>10.3g}   {vd}')
-    hm = (v[1] + v[2]) / 2
-    pct = round(100 * (hm - v[0]) / v[0], 1) if v[0] else float('nan')
-    _csv_rows.append([_section[0], label, round(v[0], 3), round(v[1], 3), round(v[2], 3), pct, vd])
+    vals = {s: fn(s) for s in STEMS}
+    vd, pct = pl.group_verdict(vals)
+    wt_mean = float(np.mean([vals[s] for s in WT])) if WT else float('nan')
+    het_mean = float(np.mean([vals[s] for s in HET])) if HET else float('nan')
+    cells = '  '.join(f'{vals[s]:.3g}' for s in STEMS)
+    print(f'{label:<34}{cells:>34}   {vd}')
+    _csv_rows.append([_section[0], label, round(wt_mean, 4), round(het_mean, 4), pct, vd,
+                      ';'.join(f'{s}={round(vals[s], 4)}' for s in STEMS)])
 
 
 def sec(name):
@@ -41,7 +37,7 @@ def sec(name):
     print(name)
 
 
-print(f'{"":34}{"WT":>10}{"HET_1":>10}{"HET_3":>10}')
+print(f'{"metric":<34}{"  ".join(STEMS):>34}   verdict')
 sec('— ABUNDANCE —')
 row('skeleton / tissue-tile mm2', lambda s: A(reg, s, 'skel_per_tile_mm2').mean())
 row('foreground fraction (mean tile)', lambda s: A(reg, s, 'fg_fraction').mean())
@@ -87,8 +83,7 @@ fr = np.array([float(r['frag_score']) for r in reg]); thr = np.percentile(fr, 75
 row('fragmentation-hotspot tile %', lambda s: 100*(A(reg, s, 'frag_score') > thr).mean())
 
 
-import csv as _csv
 with open(FM/'out_region/FINAL_METRICS.csv','w',newline='') as f:
-    w=_csv.writer(f); w.writerow(['section','metric','WT','HET_1','HET_3','HET_vs_WT_pct','verdict'])
+    w=csv.writer(f); w.writerow(['section','metric','WT_mean','HET_mean','HET_vs_WT_pct','verdict','per_image'])
     w.writerows(_csv_rows)
 print('\nsaved FINAL_METRICS.csv  (', len(_csv_rows), 'metrics )')

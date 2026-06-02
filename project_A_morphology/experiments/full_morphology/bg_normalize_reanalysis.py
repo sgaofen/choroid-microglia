@@ -60,11 +60,8 @@ def metrics(binary, norm):
     )
 
 
-def verdict(wt, h1, h3):
-    d1, d3 = h1 - wt, h3 - wt
-    same = (d1 > 0) == (d3 > 0)
-    gap = (abs(d1) + abs(d3)) / 2; spread = abs(d1 - d3)
-    return '✓ CLEAN' if (same and spread < gap and gap > 0) else ('~ same-side' if same else '✗ disagree')
+def verdict(vals):
+    return pl.group_verdict(vals)[0]
 
 
 def main():
@@ -92,10 +89,11 @@ def main():
     for tag, D in [('OLD (otsu*0.7, per-image — acquisition-confounded)', OLD),
                    (f'NEW (rolling-ball bg subtraction, tophat={TOPHAT}px + otsu*0.7)', NEW)]:
         print(f'\n================ {tag} ================')
-        print(f'{"metric":<42}{"WT":>10}{"HET_1":>10}{"HET_3":>10}{"verdict":>14}')
+        print(f'{"metric":<42}{("  ".join(STEMS)):>32}{"verdict":>14}')
         for k, label in keys:
-            wt, h1, h3 = D['F_WT_2'][k], D['F_HET_1'][k], D['F_HET_3'][k]
-            print(f'{label:<42}{wt:>10}{h1:>10}{h3:>10}{verdict(wt, h1, h3):>14}')
+            vals = {s: D[s][k] for s in STEMS}
+            cells = '  '.join(f'{vals[s]:.5g}' for s in STEMS)
+            print(f'{label:<42}{cells:>32}{verdict(vals):>14}')
 
 
 if __name__ == '__main__':

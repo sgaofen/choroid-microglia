@@ -46,12 +46,14 @@ def metrics_for(norm, method):
     )
 
 
-def verdict(wt, h1, h3, want_up):
-    d1, d3 = h1 - wt, h3 - wt
-    same = (d1 > 0) == (d3 > 0)
-    ok = same and ((d1 > 0) == want_up)
-    return ('✓ ' + ('HET↑' if (d1 > 0) else 'HET↓')) if ok and same else (
-        '~ both ' + ('up' if d1 > 0 else 'down') if same else '✗ disagree')
+def verdict(vals, want_up):
+    """vals: dict stem->value. CLEAN if all HET on the same side of WT mean."""
+    wt = float(np.mean([vals[s] for s in pl.WT]))
+    d = [vals[s] - wt for s in pl.HET]
+    same = all(x > 0 for x in d) or all(x < 0 for x in d)
+    up = d[0] > 0
+    return ('✓ ' + ('HET↑' if up else 'HET↓')) if (same and up == want_up) else (
+        '~ both ' + ('up' if up else 'down') if same else '✗ disagree')
 
 
 def main():
@@ -70,17 +72,18 @@ def main():
     # ---- does the fragmentation signal survive across methods? ----
     print('\n=== fragmentation signal vs segmentation method ===')
     print('(expect HET: endpoint/branch ratio UP, branch/100um DOWN, ep/100um UP)')
-    print(f'{"method":>11}{"metric":>22}{"WT":>9}{"HET_1":>9}{"HET_3":>9}{"verdict":>14}')
+    print(f'{"method":>11}{"metric":>22}{("  ".join(STEMS)):>30}{"verdict":>14}')
     checks = [('endpoint_branch_ratio', True), ('branch_per_100um', False),
               ('endpoint_per_100um', True), ('skel_per_tissue_mm2', False)]
     for m in METHODS:
         for key, want_up in checks:
-            wt = res[m]['F_WT_2'][key]; h1 = res[m]['F_HET_1'][key]; h3 = res[m]['F_HET_3'][key]
-            print(f'{m:>11}{key:>22}{wt:>9}{h1:>9}{h3:>9}{verdict(wt, h1, h3, want_up):>14}')
+            vals = {s: res[m][s][key] for s in STEMS}
+            cells = '  '.join(f'{vals[s]:.4g}' for s in STEMS)
+            print(f'{m:>11}{key:>22}{cells:>30}{verdict(vals, want_up):>14}')
         print()
 
     # ---- visual: a HET_1 window under each method (raw + skeleton) ----
-    s = 'F_HET_1'
+    s = pl.HET[0]
     binb = pl.segment(norms[s], 'otsu07')
     # pick the 700px window with most foreground
     TILE = 700

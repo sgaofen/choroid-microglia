@@ -1,0 +1,11 @@
+# Bundled Fiji/ImageJ — large platform-specific binary, fetch with fiji/setup_fiji.sh
+fiji/Fiji.app/
+fiji/*.zip
+fiji/*.dmg
+
+# Pipeline data + intermediates (raw inputs and registration outputs)
+*.sbx
+*.sbxall
+*.dftshifts
+TransformationMatrices*.txt
+# (*.mat and *.tif are already ignored by the project-root .gitignore)

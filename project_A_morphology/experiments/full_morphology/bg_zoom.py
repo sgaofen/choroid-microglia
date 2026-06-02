@@ -46,7 +46,7 @@ def pick_window(binary):
 
 
 fig, ax = plt.subplots(2, 3, figsize=(16, 11))
-for row, s in enumerate(['F_WT_2', 'F_HET_1']):
+for row, s in enumerate([pl.WT[0], pl.HET[0]]):
     norm, skel, lab = bg_prep(s)
     reglabel = 'densest region'
     raw = tifffile.imread(pl.find_raw(s)).astype(np.float32)

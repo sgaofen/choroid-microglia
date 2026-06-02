@@ -71,7 +71,7 @@ for t in THRS:
     for s in pl.STEMS:
         d = np.load(CACHE / f'{s}.npz', allow_pickle=True)
         cnts[s] = len(junctions(d['skel'], t))
-    hetwt = (cnts['F_HET_1']+cnts['F_HET_3'])/2 / cnts['F_WT_2']
+    hetwt = np.mean([cnts[s] for s in pl.HET]) / np.mean([cnts[s] for s in pl.WT])
     print(f'{t:>9}' + ''.join(f'{cnts[s]:>10}' for s in pl.STEMS) + f'{hetwt:>9.2f}')
 
 # crop sweep (dense WT region with branch-after-branch doublets)

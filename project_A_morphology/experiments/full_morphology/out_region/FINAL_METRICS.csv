@@ -1,26 +1,26 @@
-section,metric,WT,HET_1,HET_3,HET_vs_WT_pct,verdict
-ABUNDANCE,skeleton / tissue-tile mm2,101764.698,77117.22,75788.429,-24.9,✓ CLEAN
-ABUNDANCE,foreground fraction (mean tile),0.139,0.111,0.099,-24.3,✓ CLEAN
-ABUNDANCE,components / image (count),1291,1457,1472,13.4,✓ CLEAN
-SIZE / LENGTH,region mean segment len (um),3.307,3.243,3.481,1.7,✗ disagree
-SIZE / LENGTH,component median len (um),16.97,13.46,12.83,-22.5,✓ CLEAN
-SIZE / LENGTH,component p90 len (um),55.48,34.98,34.16,-37.7,✓ CLEAN
-SIZE / LENGTH,component median span (um),12.53,10.1,10.25,-18.8,✓ CLEAN
-THICKNESS (apparent width),region mean thickness (um),1.289,1.321,1.204,-2.1,✗ disagree
-THICKNESS (apparent width),component mean thickness (um),1.187,1.256,1.17,2.3,✗ disagree
-BRANCHING / COMPLEXITY,branch per 100um skeleton,12.287,11.979,11.31,-5.2,~ same-side
-BRANCHING / COMPLEXITY,mean branches / component,3.146,2.142,2.003,-34.1,✓ CLEAN
-FRAGMENTATION (DAM-like),region endpoint/branch ratio,1.874,2.235,2.372,22.9,✓ CLEAN
-FRAGMENTATION (DAM-like),region endpoint per 100um,22.405,25.852,25.209,14.0,✓ CLEAN
-FRAGMENTATION (DAM-like),fragmentation score (mean),-0.937,0.496,0.405,-148.1,✓ CLEAN
-FRAGMENTATION (DAM-like),% components unbranched (stub),24.09,24.777,23.166,-0.5,✗ disagree
-CONNECTIVITY,% skeleton in >100um components,26.837,6.698,5.826,-76.7,✓ CLEAN
-HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV thickness across tiles,0.106,0.103,0.102,-3.8,✓ CLEAN
-HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV seg-len across tiles,0.134,0.157,0.182,26.2,✓ CLEAN
-HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV branch/100um across tiles,0.151,0.192,0.22,36.0,✓ CLEAN
-HETEROGENEITY (within-image spread; Huixin: disease = more diverse),STD fragmentation score (tiles),1.817,1.947,2.433,20.6,~ same-side
-HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV component length,1.39,1.134,1.037,-21.9,✓ CLEAN
-MORPHOTYPE COMPOSITION,region de-ramified %,5.319,11.735,25.128,246.5,~ same-side
-MORPHOTYPE COMPOSITION,CC small/fragment M0 %,23.703,23.816,22.826,-1.6,✗ disagree
-MORPHOTYPE COMPOSITION,CC large-arbor M3 %,20.991,12.56,12.5,-40.3,✓ CLEAN
-SPATIAL FOCALITY,fragmentation-hotspot tile %,10.106,35.204,29.231,218.8,✓ CLEAN
+section,metric,WT_mean,HET_mean,HET_vs_WT_pct,verdict,per_image
+ABUNDANCE,skeleton / tissue-tile mm2,101764.6979,76452.8246,-24.9,✓ CLEAN,F_WT_2=101764.6979;F_HET_1=77117.2199;F_HET_3=75788.4292
+ABUNDANCE,foreground fraction (mean tile),0.1385,0.1048,-24.3,✓ CLEAN,F_WT_2=0.1385;F_HET_1=0.111;F_HET_3=0.0987
+ABUNDANCE,components / image (count),1291.0,1464.5,13.4,✓ CLEAN,F_WT_2=1291;F_HET_1=1457;F_HET_3=1472
+SIZE / LENGTH,region mean segment len (um),3.3066,3.3621,1.7,✗ disagree,F_WT_2=3.3066;F_HET_1=3.2432;F_HET_3=3.481
+SIZE / LENGTH,component median len (um),16.97,13.145,-22.5,✓ CLEAN,F_WT_2=16.97;F_HET_1=13.46;F_HET_3=12.83
+SIZE / LENGTH,component p90 len (um),55.48,34.57,-37.7,✓ CLEAN,F_WT_2=55.48;F_HET_1=34.98;F_HET_3=34.16
+SIZE / LENGTH,component median span (um),12.53,10.175,-18.8,✓ CLEAN,F_WT_2=12.53;F_HET_1=10.1;F_HET_3=10.25
+THICKNESS (apparent width),region mean thickness (um),1.2894,1.2621,-2.1,✗ disagree,F_WT_2=1.2894;F_HET_1=1.3205;F_HET_3=1.2037
+THICKNESS (apparent width),component mean thickness (um),1.1866,1.2133,2.3,✗ disagree,F_WT_2=1.1866;F_HET_1=1.2563;F_HET_3=1.1703
+BRANCHING / COMPLEXITY,branch per 100um skeleton,12.2869,11.6443,-5.2,~ same-side,F_WT_2=12.2869;F_HET_1=11.9786;F_HET_3=11.3101
+BRANCHING / COMPLEXITY,mean branches / component,3.1456,2.0727,-34.1,✓ CLEAN,F_WT_2=3.1456;F_HET_1=2.1421;F_HET_3=2.0034
+FRAGMENTATION (DAM-like),region endpoint/branch ratio,1.8744,2.3036,22.9,✓ CLEAN,F_WT_2=1.8744;F_HET_1=2.2348;F_HET_3=2.3724
+FRAGMENTATION (DAM-like),region endpoint per 100um,22.4051,25.5307,14.0,✓ CLEAN,F_WT_2=22.4051;F_HET_1=25.8524;F_HET_3=25.209
+FRAGMENTATION (DAM-like),fragmentation score (mean),-0.9369,0.4503,-148.1,✓ CLEAN,F_WT_2=-0.9369;F_HET_1=0.4959;F_HET_3=0.4048
+FRAGMENTATION (DAM-like),% components unbranched (stub),24.0899,23.9713,-0.5,✗ disagree,F_WT_2=24.0899;F_HET_1=24.7769;F_HET_3=23.1658
+CONNECTIVITY,% skeleton in >100um components,26.8366,6.2618,-76.7,✓ CLEAN,F_WT_2=26.8366;F_HET_1=6.6978;F_HET_3=5.8259
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV thickness across tiles,0.1064,0.1024,-3.8,✓ CLEAN,F_WT_2=0.1064;F_HET_1=0.103;F_HET_3=0.1018
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV seg-len across tiles,0.1341,0.1693,26.2,✓ CLEAN,F_WT_2=0.1341;F_HET_1=0.1568;F_HET_3=0.1817
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV branch/100um across tiles,0.1515,0.2059,36.0,✓ CLEAN,F_WT_2=0.1515;F_HET_1=0.1922;F_HET_3=0.2197
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),STD fragmentation score (tiles),1.8166,2.1901,20.6,~ same-side,F_WT_2=1.8166;F_HET_1=1.9469;F_HET_3=2.4333
+HETEROGENEITY (within-image spread; Huixin: disease = more diverse),CV component length,1.39,1.0856,-21.9,✓ CLEAN,F_WT_2=1.39;F_HET_1=1.1341;F_HET_3=1.0371
+MORPHOTYPE COMPOSITION,region de-ramified %,5.3191,18.4314,246.5,~ same-side,F_WT_2=5.3191;F_HET_1=11.7347;F_HET_3=25.1282
+MORPHOTYPE COMPOSITION,CC small/fragment M0 %,23.7026,23.3211,-1.6,✗ disagree,F_WT_2=23.7026;F_HET_1=23.8161;F_HET_3=22.8261
+MORPHOTYPE COMPOSITION,CC large-arbor M3 %,20.9915,12.53,-40.3,✓ CLEAN,F_WT_2=20.9915;F_HET_1=12.5601;F_HET_3=12.5
+SPATIAL FOCALITY,fragmentation-hotspot tile %,10.1064,32.2174,218.8,✓ CLEAN,F_WT_2=10.1064;F_HET_1=35.2041;F_HET_3=29.2308

@@ -55,7 +55,7 @@ def pick_window(s, want):
 
 
 fig, ax = plt.subplots(2, 2, figsize=(12, 12))
-for row, (s, want) in enumerate([('F_WT_2', 'min'), ('F_HET_1', 'max')]):
+for row, (s, want) in enumerate([(pl.WT[0], 'min'), (pl.HET[0], 'max')]):
     norm, _, _, skel = pl.prep(s)
     lab, _ = ndi.label(skel, structure=np.ones((3, 3)))
     ty, tx = pick_window(s, want)
@@ -100,14 +100,16 @@ panels = [
     ('fragmentation hotspots %', lambda s: 100*(Acsv(reg, s, 'frag_score') > np.percentile(fr_all, 75)).mean(), 'more in HET'),
 ]
 fig, axes = plt.subplots(3, 3, figsize=(15, 12))
-colors = ['#2c7bb6', '#d7191c', '#fd8d3c']
+order = pl.WT + pl.HET                       # WT image(s) first, then HET
+bar_lab = [s.replace('F_', '') for s in order]
+bar_col = ['#2c7bb6' if COND[s] == 'WT' else '#d7191c' for s in order]
 for ax_, (title, fn, tag) in zip(axes.ravel(), panels):
-    vals = [fn(s) for s in STEMS]
-    ax_.bar(['WT', 'HET_1', 'HET_3'], vals, color=colors)
+    vals = [fn(s) for s in order]
+    ax_.bar(bar_lab, vals, color=bar_col)
     ax_.set_title(f'{title}\n({tag})', fontsize=10.5)
     for j, v in enumerate(vals):
         ax_.text(j, v, f'{v:.3g}', ha='center', va='bottom', fontsize=9)
-    ax_.margins(y=0.18)
+    ax_.margins(y=0.18); ax_.tick_params(axis='x', labelsize=8)
 fig.suptitle('All clean dimensions: both HET replicates agree, both differ from WT', fontsize=14)
 fig.tight_layout(); fig.savefig(OUT/'story_dashboard.png', dpi=115, bbox_inches='tight'); plt.close()
 print('saved story_dashboard.png')

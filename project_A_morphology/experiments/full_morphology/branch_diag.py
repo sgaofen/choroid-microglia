@@ -64,7 +64,7 @@ def loose_branches(sk):
 
 
 fig, ax = plt.subplots(1, 2, figsize=(15, 8))
-for col, s in enumerate(['F_WT_2', 'F_HET_1']):
+for col, s in enumerate([pl.WT[0], pl.HET[0]]):
     norm, skel = bg_skel(s)
     # densest window
     H, W = skel.shape; best, bn = (0, 0), -1

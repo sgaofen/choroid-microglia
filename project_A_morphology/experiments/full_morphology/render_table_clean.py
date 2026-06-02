@@ -63,7 +63,7 @@ SPEC = [
 ]
 rows = []
 for label, key, mean in SPEC:
-    wt = V['F_WT_2'][key]; hm = (V['F_HET_1'][key] + V['F_HET_3'][key]) / 2
+    wt = np.mean([V[s][key] for s in pl.WT]); hm = np.mean([V[s][key] for s in pl.HET])
     rows.append((label, round(100*(hm-wt)/wt), mean))
 rows.sort(key=lambda r: r[1])
 labels = [r[0] for r in rows]; vals = [r[1] for r in rows]; means = [r[2] for r in rows]

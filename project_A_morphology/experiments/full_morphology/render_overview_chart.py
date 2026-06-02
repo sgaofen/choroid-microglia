@@ -12,7 +12,7 @@ import pipeline as pl
 OUT = pl.ROOT / 'experiments/full_morphology/out_region'
 rows = list(csv.DictReader(open(OUT / 'FINAL_METRICS.csv')))
 # drop z-score metrics (WT<=0): % change is meaningless across zero
-rows = [r for r in rows if float(r['WT']) > 0]
+rows = [r for r in rows if float(r['WT_mean']) > 0]
 
 # build display list with section separators
 SECS = []

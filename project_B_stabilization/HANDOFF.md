@@ -4,6 +4,12 @@
 > z-stack motion-stabilization pipeline). The imaging/microglia work (Project A)
 > is being handled in a separate session — keep this one focused on Project B.
 > Complements `spec.md` (goals/constraints) with a concrete code map + first steps.
+>
+> **Update (2026-05-28):** the full reverse-engineering is done — see `CODEMAP.md`
+> for the verified call graph, true on-disk data flow, the 3–4× bloat breakdown, the
+> Fiji/ImageJ bundling list, every reproducibility blocker with a fix, dead-code
+> inventory, and a confident-vs-needs-data cleanup split. The data-flow sketch below
+> is the short version; `CODEMAP.md` supersedes it where they differ.
 
 ## 30-second orientation
 Choroid plexus imaged in vivo floats freely in CSF (anchored at its base, the

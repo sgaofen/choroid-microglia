@@ -111,17 +111,46 @@ project_B_stabilization/         # Shipley-2020 z-stack stabilization (see HANDO
 docs/figures/                    # showcase figures (this README)
 ```
 
-## Reproducing
+## Setup on a new machine
+
+The pipeline is self-contained and path-portable (every path resolves relative to
+the repo, so it runs from any clone location / OS / username).
 
 ```bash
-# environment: numpy, scipy, scikit-image, tifffile, scikit-learn, skan, matplotlib
-cd project_A_morphology/experiments/full_morphology
-python cache_arrays.py            # build cached arrays from data/raw
-python region_morphotype.py       # region analysis
-python cc_morphotype.py           # connected-component analysis
-python comprehensive_summary.py   # → out_region/FINAL_METRICS.csv
-python render_table_clean.py      # → key-findings figure
+git clone https://github.com/sgaofen/choroid-microglia
+cd choroid-microglia
+python -m venv .venv && source .venv/bin/activate     # or conda/micromamba
+pip install -r requirements.txt
 ```
+
+## Running on your own images
+
+1. Drop your `.tif` images into `project_A_morphology/data/raw/`. **Put `WT` or
+   `HET` in each filename** — images are auto-discovered and grouped into the
+   control (WT) vs disease (HET) groups by that token. Any number of images per
+   group works; the WT-vs-HET screen aggregates over each group and flags a
+   metric as **clean** only when every HET image lands on the same side of the WT
+   mean and the replicates agree.
+2. Run the pipeline:
+
+```bash
+cd project_A_morphology/experiments/full_morphology
+python cache_arrays.py            # segment → skeleton → topology, cached per image
+python region_morphotype.py       # region (tile) fingerprints + morphotypes
+python cc_morphotype.py           # connected-component sizes / morphotypes
+python comprehensive_summary.py   # all metrics + verdicts → out_region/FINAL_METRICS.csv
+python render_table_clean.py      # key-findings figure  (out_region/stats_table.png)
+python render_overview_chart.py   # full visual data overview
+python present.py                 # dashboard + connectivity figures
+```
+
+Optional robustness / diagnostics: `segmentation_compare.py` (5 segmentation
+methods), `grid_robustness.py` (grid placements), `merge_sweep.py` (junction-merge
+tolerance), `branch_simple_diag.py` / `verify` crops (eyeball the extraction).
+
+The branch-merge tolerance (junctions within 3 µm on the same process counted as
+one) lives in `clean_topology.merged_branches`; segmentation/normalization params
+live at the top of `pipeline.py`.
 
 ## Project B — `project_B_stabilization/`
 

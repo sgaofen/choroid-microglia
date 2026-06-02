@@ -1,13 +1,12 @@
 import numpy as np
+from pathlib import Path
 from scipy import ndimage as ndi
 
 PIX = 0.207
 PIX_AREA = PIX**2
-paths = {
-    'WT':    '/Users/stephenyu/choroid-microglia/project_A_morphology/experiments/full_morphology/cache_bg/F_WT_2.npz',
-    'HET_1': '/Users/stephenyu/choroid-microglia/project_A_morphology/experiments/full_morphology/cache_bg/F_HET_1.npz',
-    'HET_3': '/Users/stephenyu/choroid-microglia/project_A_morphology/experiments/full_morphology/cache_bg/F_HET_3.npz',
-}
+# auto-discover cached images (relative to this file) — works on any machine
+CACHE = Path(__file__).resolve().parent / 'cache_bg'
+paths = {p.stem: str(p) for p in sorted(CACHE.glob('*.npz'))}
 
 STRUCT8 = np.ones((3,3), bool)
 

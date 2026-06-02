@@ -29,7 +29,7 @@ def branches_simple(sk):
 
 
 fig, ax = plt.subplots(1, 2, figsize=(16, 8.5))
-for col, s in enumerate(['F_WT_2', 'F_HET_1']):
+for col, s in enumerate([pl.WT[0], pl.HET[0]]):
     d = np.load(CACHE / f'{s}.npz', allow_pickle=True)
     skel = d['skel']; binary = d['binary']
     H, W = skel.shape; best, bn = (0, 0), -1

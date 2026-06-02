@@ -22,7 +22,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-ROOT = Path('/Users/stephenyu/choroid-microglia/project_A_morphology')
+ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / 'data/raw'
 V29 = ROOT / 'experiments/v29_short_spur_audit'
 OUT = ROOT / 'experiments/full_morphology/out'

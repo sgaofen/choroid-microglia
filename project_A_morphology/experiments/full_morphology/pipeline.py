@@ -7,6 +7,7 @@ rules, then assigned to tiles/components — so tile/component counts are
 consistent with the whole image and tile borders never split a junction cluster).
 """
 import sys
+import re
 from pathlib import Path
 import numpy as np
 import tifffile
@@ -15,15 +16,65 @@ from scipy.ndimage import white_tophat
 from skimage import filters, morphology
 from skan import Skeleton, summarize
 
-ROOT = Path('/Users/stephenyu/choroid-microglia/project_A_morphology')
+# Paths are resolved RELATIVE to this file so the repo runs on any machine /
+# username / clone location (this file lives at project_A_morphology/experiments/
+# full_morphology/pipeline.py → parents[2] == project_A_morphology).
+ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / 'data/raw'
-V29 = ROOT / 'experiments/v29_short_spur_audit'
 sys.path.insert(0, str(ROOT / 'experiments'))
 import clean_topology as ct
 
 PIXEL_UM = 0.207
-STEMS = ['F_WT_2', 'F_HET_1', 'F_HET_3']
-COND = {'F_WT_2': 'WT', 'F_HET_1': 'HET', 'F_HET_3': 'HET'}
+
+
+def discover_images(raw_dir=RAW):
+    """Auto-discover the images to analyze from data/raw/*.tif. Returns
+    (STEMS, COND): a short key per image (an 'F_WT_2'-style token if the filename
+    contains one, else the full filename stem) and its condition (WT vs HET,
+    inferred from 'WT'/'HET' in the key — anything not WT is treated as HET).
+    Drop new .tif files into data/raw and they are picked up automatically; just
+    make sure the filename contains WT or HET. Override by setting STEMS/COND
+    before importing if you need custom keys."""
+    stems, cond = [], {}
+    for p in sorted(raw_dir.glob('*.tif')):
+        m = re.search(r'[A-Za-z]_(?:WT|HET)_\w+', p.stem) or re.search(r'(?:WT|HET)[_-]?\w*', p.stem)
+        key = m.group(0) if m else p.stem
+        if key in cond:                      # de-dup if two files map to same key
+            key = p.stem
+        stems.append(key)
+        cond[key] = 'WT' if 'WT' in key.upper() else 'HET'
+    # control (WT) images first, then HET — stable, reproducible row order
+    stems.sort(key=lambda s: (cond[s] != 'WT', s))
+    return stems, cond
+
+
+STEMS, COND = discover_images()
+if not STEMS:                                # graceful fallback for a fresh clone with no images yet
+    STEMS = ['F_WT_2', 'F_HET_1', 'F_HET_3']
+    COND = {'F_WT_2': 'WT', 'F_HET_1': 'HET', 'F_HET_3': 'HET'}
+
+# condition groups (any number of images per group; used by the WT-vs-HET screen)
+WT = [s for s in STEMS if COND[s] == 'WT']
+HET = [s for s in STEMS if COND[s] == 'HET']
+
+
+def group_verdict(vals):
+    """Replicate-consistency screen generalized to any number of images.
+    vals: dict stem->value. Returns (verdict, pct_diff_HET_vs_WT). CLEAN = every
+    HET image on the SAME side of the WT-group mean AND the HET spread smaller
+    than the mean gap to WT (so biological replicates agree)."""
+    wt = float(np.mean([vals[s] for s in WT])) if WT else float('nan')
+    hets = [vals[s] for s in HET]
+    if not WT or not hets or wt == 0:
+        return '~ n/a', float('nan')
+    d = [h - wt for h in hets]
+    same = all(x > 0 for x in d) or all(x < 0 for x in d)
+    gap = float(np.mean([abs(x) for x in d]))
+    spread = (max(hets) - min(hets)) if len(hets) > 1 else 0.0
+    pct = round(100 * (float(np.mean(hets)) - wt) / wt, 1)
+    if same and spread < gap and gap > 0:
+        return '✓ CLEAN', pct
+    return ('~ same-side', pct) if same else ('✗ disagree', pct)
 
 
 def find_raw(stem):

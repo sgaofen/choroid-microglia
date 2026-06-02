@@ -63,7 +63,7 @@ def main():
                ('origin 50,50', 50, 50, TILE), ('origin 0,100', 0, 100, TILE),
                ('origin 100,0', 100, 0, TILE), ('sliding stride100', 0, 0, 100)]
 
-    print(f'\n{"config":>20}{"WT":>9}{"HET_1":>9}{"HET_3":>9}{"verdict":>14}')
+    print(f'\n{"config":>20}{("  ".join(STEMS)):>28}{"verdict":>14}')
     for name, oy, ox, stride in configs:
         per = {s: tile_frag(C[s], oy, ox, stride) for s in STEMS}
         allr = [r for s in STEMS for r in per[s]]
@@ -78,12 +78,11 @@ def main():
             k = len(per[s])
             hot[s] = round(100*float((frag[i:i+k] > thr).mean()), 1)
             i += k
-        wt, h1, h3 = hot['F_WT_2'], hot['F_HET_1'], hot['F_HET_3']
-        d1, d3 = h1-wt, h3-wt
-        same = (d1 > 0) == (d3 > 0)
-        gap = (abs(d1)+abs(d3))/2; spread = abs(d1-d3)
-        v = '✓ HET↑' if (same and d1 > 0 and spread < gap) else ('~ both up' if (same and d1 > 0) else '✗')
-        print(f'{name:>20}{wt:>9}{h1:>9}{h3:>9}{v:>14}')
+        vd, _ = pl.group_verdict(hot)
+        wtm = np.mean([hot[s] for s in pl.WT]); up = np.mean([hot[s] for s in pl.HET]) > wtm
+        v = ('✓ HET↑' if up else '✓ HET↓') if vd == '✓ CLEAN' else (vd)
+        cells = '  '.join(f'{hot[s]:.4g}' for s in STEMS)
+        print(f'{name:>20}{cells:>28}{v:>14}')
     print('\n(values = % of tiles that are fragmentation hotspots, pooled-p75 threshold)')
 
 

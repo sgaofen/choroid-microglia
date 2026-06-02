@@ -38,7 +38,7 @@ fig.tight_layout(); fig.savefig(OUT / 'skeleton_fullimage.png', dpi=95, bbox_inc
 # ---- zoom (700px) for WT and HET: raw | skeleton+branch+endpoint ----
 WIN = 700
 fig, ax = plt.subplots(2, 2, figsize=(12, 12))
-for row, s in enumerate(['F_WT_2', 'F_HET_1']):
+for row, s in enumerate([pl.WT[0], pl.HET[0]]):
     norm, skel, J, E = data[s]
     # window with most skeleton
     H, W = skel.shape; best, bn = (0, 0), -1

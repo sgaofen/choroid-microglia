@@ -15,11 +15,12 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-ROOT = Path('/Users/stephenyu/choroid-microglia/project_A_morphology')
-RAW = ROOT / 'data/raw'
-V29 = ROOT / 'experiments/v29_short_spur_audit'
+sys.path.insert(0, str(Path(__file__).parent))
+import pipeline as pl
+from pipeline import COND
+ROOT = pl.ROOT
+RAW = pl.RAW
 OUTR = ROOT / 'experiments/full_morphology/out_region'
-sys.path.insert(0, str(ROOT / 'experiments'))
 import clean_topology as ct
 
 TILE = 200
@@ -53,8 +54,8 @@ def crop(arr, cy, cx):
 
 
 # canonical clustering: C0 = most ramified, C3 = de-ramified (last)
-panels = [('F_WT_2', 0, 'WT ramified (C0)'),
-          ('F_HET_1', 3, 'HET de-ramified (C3: fragmented)')]
+panels = [(pl.WT[0], 0, 'WT ramified (C0)'),
+          (pl.HET[0], 3, 'HET de-ramified (C3: fragmented)')]
 
 fig, axes = plt.subplots(2, 2, figsize=(11, 11))
 for row, (stem, clu, title) in enumerate(panels):

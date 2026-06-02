@@ -24,7 +24,7 @@ CACHE = pl.ROOT / 'experiments/full_morphology/cache_bg'
 # ---------- (B) visual verification crop ----------
 WIN = 380
 fig, ax = plt.subplots(2, 3, figsize=(16, 11))
-for row, s in enumerate(['F_WT_2', 'F_HET_1']):
+for row, s in enumerate([pl.WT[0], pl.HET[0]]):
     d = np.load(CACHE / f'{s}.npz', allow_pickle=True)
     skel = d['skel']; binary = d['binary']; cc = d['cc']; J = d['J']; E = d['E']
     raw = tifffile.imread(pl.find_raw(s)).astype(np.float32); norm = pl.normalize(raw)
