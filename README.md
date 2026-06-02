@@ -95,7 +95,7 @@ proxy, not a true diameter.
 
 ```
 project_A_morphology/
-  data/raw/                      # 3 sample 16-bit TIFs (published, safe to share)
+  data/raw/                      # drop your .tif images here (gitignored; not committed)
   experiments/
     clean_topology.py            # skeleton topology: spurs, loops, branch points
     full_morphology/
