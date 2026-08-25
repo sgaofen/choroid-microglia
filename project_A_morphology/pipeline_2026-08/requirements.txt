@@ -1,0 +1,34 @@
+# Python 3.9.6 (Apple Command Line Tools python3, macOS arm64).
+# Versions are the exact ones the published numbers were produced with
+# (pip freeze of the venv used for the 2026-08 delivery).
+#
+#   python3 -m venv .venv
+#   ./.venv/bin/pip install -r requirements.txt
+#
+# scikit-image is the version-sensitive one: skeletonize(method="lee"), sato,
+# apply_hysteresis_threshold and remove_small_objects can change behaviour
+# between releases. Do not float this pin.
+
+numpy==2.0.2
+scipy==1.13.1
+scikit-image==0.24.0
+tifffile==2024.8.30
+imagecodecs==2024.12.30
+pandas==2.3.3
+pillow==11.3.0
+tabulate==0.9.0     # pandas .to_markdown() in stats_baseline_parallel.py and analysis_group_comparison.py
+matplotlib==3.9.4   # analysis_group_comparison.py figures (it degrades to tables-only without it)
+img2pdf==0.6.3      # make_pdfs.py imports it at module top and hard-crashes without it
+
+# Transitive, pinned for exactness (installed automatically otherwise):
+networkx==3.2.1
+imageio==2.37.2
+lazy-loader==0.5
+packaging==26.2
+python-dateutil==2.9.0.post0
+pytz==2026.2
+tzdata==2026.3
+six==1.17.0
+
+# Present in the original venv, not used by any script in this bundle:
+# skan==0.13.1  scikit-learn==1.6.1  aicspylibczi==3.3.1  openpyxl==3.1.5

@@ -95,8 +95,15 @@ proxy, not a true diameter.
 
 ```
 project_A_morphology/
+  pipeline_2026-08/              # ← CURRENT. The 12-animal WT/Het cohort pipeline.
+    server.py                    #   the engine: frozen 39-key recipe + per-ROI extraction
+    index.html                   #   workbench front end (draw ROIs, inspect extraction)
+    preprocess_clean_images.py   #   step 0: flat-fielded TIF - 8um rolling ball -> clean/
+    rebuild_clean.py             #   standalone step 0, paths on the command line
+    stats_*.py                   #   animal-median collapse, Hedges g, permutation, BH-FDR
+    rois/                        #   74 hand-drawn ROI boxes - the one irreplaceable input
   data/raw/                      # drop your .tif images here (gitignored; not committed)
-  experiments/
+  experiments/                   # 2026-05/06 exploration that led to the above
     clean_topology.py            # skeleton topology: spurs, loops, branch points
     full_morphology/
       pipeline.py                # single source of truth: segment → skeleton → topology
@@ -110,6 +117,11 @@ project_A_morphology/
 project_B_stabilization/         # Shipley-2020 z-stack stabilization (see HANDOFF.md)
 docs/figures/                    # showcase figures (this README)
 ```
+
+**Start in `project_A_morphology/pipeline_2026-08/`** — that is the version the reported numbers
+came from, and its `README.md` has the run order, the data layout it expects, and the ways it can
+silently produce wrong numbers. `experiments/` below it is the earlier exploration, kept for
+provenance. Images and measured results are not in this repository.
 
 ## Setup on a new machine
 

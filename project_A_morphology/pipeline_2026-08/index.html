@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cell Skeleton Tuning Workbench</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background:#14161a; color:#d8dce2; font:13px/1.5 -apple-system,"PingFang SC",sans-serif;
+         display:grid; grid-template-rows:auto 1fr; height:100vh; overflow:hidden; }
+  header { display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px; padding:6px 12px;
+           background:#1c1f25; border-bottom:1px solid #2a2e36; }
+  header button, header select { white-space:nowrap; }
+  header b { color:#fff; font-size:14px; }
+  select,button,input[type=text] { background:#262a32; color:#e6e9ee; border:1px solid #3a4050;
+           border-radius:5px; padding:4px 8px; font-size:13px; }
+  button { cursor:pointer; } button:hover { background:#323847; }
+  button.primary { background:#2b5cad; border-color:#3a6cc0; } button.primary:hover{background:#356ac4;}
+  #main { display:grid; grid-template-columns: 1fr 1fr 300px; min-height:0; }
+  #ovwrap { position:relative; border-right:1px solid #2a2e36; min-width:0; }
+  #ov { position:absolute; inset:0; width:100%; height:100%; cursor:crosshair; }
+  #ovhint { position:absolute; left:8px; bottom:6px; color:#8a93a3; font-size:12px; pointer-events:none;
+            background:rgba(20,22,26,.7); padding:2px 6px; border-radius:4px; }
+  #detwrap { display:flex; flex-direction:column; min-width:0; border-right:1px solid #2a2e36; }
+  #viewbar { display:flex; gap:8px; align-items:center; padding:6px 10px; border-bottom:1px solid #2a2e36;
+             flex-wrap:wrap; }
+  #viewbar label { cursor:pointer; }
+  #det { flex:1; min-height:0; position:relative; }
+  #detcv { position:absolute; inset:0; width:100%; height:100%; }
+  #busy { position:absolute; top:8px; right:10px; color:#ffb84d; display:none; }
+  #metrics { padding:6px 10px; border-top:1px solid #2a2e36; display:grid;
+             grid-template-columns:repeat(4,1fr); gap:2px 10px; font-size:12px; }
+  #metrics span { color:#8a93a3; } #metrics b { color:#fff; font-weight:600; }
+  #panel { overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px; }
+  fieldset { border:1px solid #2a2e36; border-radius:8px; padding:8px 10px 6px; }
+  legend { color:#9fb4d8; padding:0 6px; font-weight:600; }
+  .row { display:grid; grid-template-columns: 86px 1fr 44px; align-items:center; gap:6px; margin:3px 0; }
+  .row label { color:#aab2bf; font-size:12px; white-space:nowrap; }
+  .row output { text-align:right; color:#ffd479; font-variant-numeric:tabular-nums; font-size:12px; }
+  input[type=range] { width:100%; accent-color:#4d8dff; height:18px; }
+  .chk { display:flex; gap:14px; margin:4px 0; color:#aab2bf; }
+  .seg { display:flex; gap:0; margin:4px 0; }
+  .seg button { border-radius:0; flex:1; padding:3px 4px; font-size:12px; }
+  .seg button:first-child{border-radius:5px 0 0 5px} .seg button:last-child{border-radius:0 5px 5px 0}
+  .seg button.on { background:#2b5cad; border-color:#3a6cc0; color:#fff; }
+  body.simple fieldset.adv { display:none; }
+  body.simple #main { grid-template-columns: 1fr 1fr 260px; }
+  button.mode-on { background:#0e7a5f; border-color:#18a37f; color:#fff; }
+  #prog { color:#9fb4d8; white-space:nowrap; }
+  #roitable { width:100%; border-collapse:collapse; font-size:12px; }
+  #roitable th,#roitable td { border-bottom:1px solid #2a2e36; padding:3px 4px; text-align:right; }
+  #roitable th { color:#8a93a3; font-weight:500; } #roitable td:first-child,#roitable th:first-child{text-align:left}
+  #roitable tr:hover td { background:#20242c; cursor:pointer; }
+  a.del { color:#ff7676; text-decoration:none; padding:0 4px; }
+  #legendbar { font-size:11.5px; color:#8a93a3; }
+  #legendbar i { font-style:normal; padding:0 2px; }
+</style>
+</head>
+<body>
+<header>
+  <b>Cell Skeleton Tuner</b>
+  <select id="sample"></select>
+  <select id="ch"><option>C0</option><option>C1</option><option>C2</option></select>
+  <select id="boxsize">
+    <option value="256">Inspect box 42 µm</option>
+    <option value="512" selected>Inspect box 84 µm</option>
+    <option value="1024">Inspect box 169 µm</option>
+  </select>
+  <select id="bigsize">
+    <option value="2048" selected>Select box 338 µm</option>
+    <option value="3072">Select box 507 µm</option>
+    <option value="4096">Select box 676 µm</option>
+  </select>
+  <button id="modebtn">◻ Select mode</button>
+  <button class="primary" id="saveroi">★ Save ROI</button>
+  <button id="recalc" title="Re-measure every saved ROI of THIS sample with the current parameters (slow)">Recompute all ROIs</button>
+  <button id="export" title="Recomputes EVERY ROI of EVERY sample with the current parameters - can take several minutes; the download appears when it finishes">Export CSV (slow)</button>
+  <button id="advbtn">⚙ Params</button>
+  <button id="resetbtn">↺ Reset defaults</button>
+  <span id="prog"></span>
+  <span id="status" style="color:#8a93a3;margin-left:auto"></span>
+</header>
+<div id="main">
+  <div id="ovwrap">
+    <canvas id="ov"></canvas>
+    <div id="ovhint">Wheel = zoom · Drag = pan · Click = inspect · Shift+drag = save ROI · Arrows move box</div>
+  </div>
+  <div id="detwrap">
+    <div id="viewbar">
+      <label><input type="radio" name="view" value="overlay" checked> Overlay</label>
+      <label><input type="radio" name="view" value="orig"> Original</label>
+      <label><input type="radio" name="view" value="comp"> Component colors</label>
+      <label><input type="radio" name="view" value="split"> Original|Overlay</label>
+      <span id="legendbar">Legend:<i style="color:#5a8dff">■mask</i><i style="color:#ff5c5c">─skeleton</i><i style="color:#6f6">●junction</i><i style="color:#5fe0ff">●tip</i><i style="color:#ffd84d">◯soma</i></span>
+      <span id="busy">Computing…</span>
+    </div>
+    <div id="det"><canvas id="detcv"></canvas></div>
+    <div id="metrics"></div>
+  </div>
+  <div id="panel">
+    <fieldset><legend>Display (does not affect extraction)</legend>
+      <div class="chk"><label><input type="checkbox" id="clean_bg" checked> Background cleanup (flatten blank areas to black)</label></div>
+      <div class="chk"><label><input type="checkbox" id="uni_disp"> Fixed display scale in σ units (same brightness mapping for every image; useful for judging noise, normally off)</label></div>
+      <div class="row"><label title="Only active when 'Fixed display scale' is ticked">Fixed-scale white point (σ)</label><input type="range" id="uni_hi" min="5" max="60" step="1" value="25"><output>25</output></div>
+      <div class="row"><label title="Background cleanup floor, in noise σ">Bkg cleanup floor σ</label><input type="range" id="clean_floor" min="0" max="4" step="0.5" value="2"><output>2</output></div>
+      <div class="row"><label>Display black point (percentile)</label><input type="range" id="disp_lo" min="0" max="20" step="0.5" value="1"><output>1</output></div>
+      <div class="row"><label>Display white point (percentile)</label><input type="range" id="disp_hi" min="95" max="100" step="0.1" value="99.7"><output>99.7</output></div>
+      <div class="row"><label>Gamma</label><input type="range" id="gamma" min="0.3" max="3" step="0.05" value="1"><output>1</output></div>
+      <div class="row"><label>Mask opacity</label><input type="range" id="mask_alpha" min="0" max="1" step="0.05" value="0.35"><output>0.35</output></div>
+      <div class="chk"><label><input type="checkbox" id="fat_skel" checked> Draw skeleton thicker</label></div>
+    </fieldset>
+    <fieldset class="adv"><legend>Preprocessing</legend>
+      <div class="chk"><label><input type="checkbox" id="use_clean" checked> Use clean base image (flat-fielded + background-removed; AFFECTS EXTRACTION)</label></div>
+      <div class="row"><label title="Rolling-ball background radius, µm">Rolling-ball radius µm</label><input type="range" id="bg_um" min="0" max="24" step="0.5" value="8"><output>8</output></div>
+      <div class="row"><label>Smooth σ µm</label><input type="range" id="smooth_um" min="0" max="2" step="0.05" value="0.6"><output>0.6</output></div>
+      <div class="seg" id="enhance">
+        <button data-v="none">No enhance</button><button data-v="sato" class="on">Sato tubeness</button>
+      </div>
+      <div class="row"><label>Sato σ µm</label><input type="range" id="sato_um" min="0.3" max="2" step="0.05" value="0.6"><output>0.6</output></div>
+      <div class="row"><label title="Brightness gate z">Bright gate z</label><input type="range" id="gate_z" min="0" max="4" step="0.1" value="2"><output>2</output></div>
+      <div class="chk"><label><input type="checkbox" id="sato_union" checked> Union with brightness mask (keeps thick structures whole)</label></div>
+    </fieldset>
+    <fieldset class="adv"><legend>Threshold</legend>
+      <div class="seg" id="thr_mode">
+        <button data-v="zlocal" class="on">Local z</button><button data-v="zhyst">Hysteresis z</button><button data-v="otsu">Otsu × factor</button><button data-v="pct">Percentile</button>
+      </div>
+      <div class="row"><label>z threshold</label><input type="range" id="z_thr" min="1" max="9" step="0.1" value="3.5"><output>3.5</output></div>
+      <div class="row"><label title="Low threshold for hysteresis mode">Hysteresis low z</label><input type="range" id="z_lo" min="0.5" max="6" step="0.1" value="2"><output>2</output></div>
+      <div class="row"><label title="Local window µm">Local win µm</label><input type="range" id="local_win_um" min="5" max="60" step="1" value="40"><output>40</output></div>
+      <div class="row"><label>Otsu factor</label><input type="range" id="otsu_k" min="0.3" max="1.6" step="0.05" value="0.7"><output>0.7</output></div>
+      <div class="row"><label title="Only active in Percentile mode">Percentile value</label><input type="range" id="pct" min="90" max="99.9" step="0.1" value="99"><output>99</output></div>
+    </fieldset>
+    <fieldset class="adv"><legend>Cleanup / Skeleton</legend>
+      <div class="row"><label>Closing px</label><input type="range" id="close_px" min="0" max="6" step="1" value="2"><output>2</output></div>
+      <div class="row"><label>Min area µm²</label><input type="range" id="min_area_um2" min="0" max="60" step="1" value="6"><output>6</output></div>
+      <div class="row"><label title="Minimum skeleton length, µm">Min skeleton µm</label><input type="range" id="min_skel_um" min="0" max="40" step="1" value="5"><output>5</output></div>
+      <div class="row"><label title="Minimum skeleton length for a component that has NO detected soma, µm">Min skeleton, no soma µm</label><input type="range" id="min_skel_free_um" min="0" max="60" step="1" value="15"><output>15</output></div>
+      <div class="row"><label title="Delete end-branches shorter than this multiple of the local soma radius; 0 = off, do not exceed ~1.5">Spur pruning × soma radius</label><input type="range" id="spur_k" min="0" max="3" step="0.1" value="1.2"><output>1.2</output></div>
+      <div class="row"><label title="Spur length floor µm">Spur floor µm</label><input type="range" id="spur_min_um" min="0" max="8" step="0.5" value="4"><output>4</output></div>
+      <div class="row"><label title="Junction merge distance µm">Junc merge µm</label><input type="range" id="junc_merge_um" min="0" max="8" step="0.5" value="3"><output>3</output></div>
+      <div class="row"><label>Soma merge µm</label><input type="range" id="soma_merge_um" min="0" max="12" step="0.5" value="6"><output>6</output></div>
+      <div class="row"><label title="Minimum peak brightness (in noise σ) for a short skeleton to be counted as a round cell">Round-cell min peak σ</label><input type="range" id="round_bright_z" min="0" max="200" step="5" value="50"><output>50</output></div>
+      <div class="row"><label title="Reject regions whose local focus score falls below this; 0 disables the gate">Defocus gate (0 = off)</label><input type="range" id="focus_thr" min="0" max="1" step="0.05" value="0"><output>0</output></div>
+      <div class="row"><label>Soma radius µm</label><input type="range" id="soma_r_um" min="1" max="8" step="0.25" value="2.4"><output>2.4</output></div>
+      <div class="chk"><label><input type="checkbox" id="fill_holes" checked> Fill holes</label>
+        <label><input type="checkbox" id="drop_nosk" checked> Drop masks with no skeleton</label></div>
+      <div class="chk"><label><input type="checkbox" id="dot_filter" checked> Round-cell filter</label>
+        <label><input type="checkbox" id="web_filter" checked> Speckle-web filter (branched fragments with no soma)</label></div>
+    </fieldset>
+    <fieldset><legend>ROI (<span id="roin">0</span>)</legend>
+      <table id="roitable"><thead><tr>
+        <th>#</th><th>mm²</th><th>skel mm/mm²</th><th>junc/mm²</th><th>soma/mm²</th><th></th>
+      </tr></thead><tbody></tbody></table>
+    </fieldset>
+  </div>
+</div>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const OVDS = 8;                       // overview downsampling relative to the full-res image
+let PIX = 0.164827;              // overwritten from /api/samples (server config.PIX_UM)
+let sample = null, ch = "C0";
+let ovImg = null;                     // overview Image
+let view = { s: 0.3, ox: 0, oy: 0 };  // overview pixels -> canvas
+let needFit = false;                  // on next draw, fit to the canvas's actual size
+let box = { x: 6000, y: 6000 };       // inspect-box center (full-res px)
+let bigBox = null;                    // select-box center (set by click after entering select mode)
+let mode = "inspect";                 // inspect = inspect | select = region select
+let allSamples = [], roiCounts = {};
+let rois = [];
+let roiMetrics = {};                  // id -> metrics
+let curImgs = {}, curMetrics = null;
+let fetchCtl = null, debTimer = null;
+let busyBig = false;                  // full extraction of the big box running (show the instant original preview first)
+const loadImg = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.src = src; });
+
+const SLIDERS = ["uni_hi","clean_floor","disp_lo","disp_hi","gamma","mask_alpha","bg_um","smooth_um","sato_um","gate_z",
+  "z_thr","z_lo","local_win_um","otsu_k","pct","close_px","min_area_um2","min_skel_um","min_skel_free_um","soma_r_um","spur_k","spur_min_um","junc_merge_um","soma_merge_um","focus_thr","round_bright_z"];
+const seg = { enhance: "sato", thr_mode: "zlocal" };
+
+function params() {
+  const p = { ch, fat_skel: $("fat_skel").checked ? 1 : 0, fill_holes: $("fill_holes").checked ? 1 : 0,
+              sato_union: $("sato_union").checked ? 1 : 0,
+              drop_nosk: $("drop_nosk").checked ? 1 : 0,
+              clean_bg: $("clean_bg").checked ? 1 : 0,
+              uni_disp: $("uni_disp").checked ? 1 : 0,
+              use_clean: $("use_clean").checked ? 1 : 0,
+              dot_filter: $("dot_filter").checked ? 1 : 0,
+              web_filter: $("web_filter").checked ? 1 : 0,
+              enhance: seg.enhance, thr_mode: seg.thr_mode };
+  for (const s of SLIDERS) p[s] = $(s).value;
+  return p;
+}
+function activeBox() {
+  return (mode === "select" && bigBox)
+    ? { cx: bigBox.x, cy: bigBox.y, s: +$("bigsize").value }
+    : { cx: box.x, cy: box.y, s: +$("boxsize").value };
+}
+function updateProg() {
+  roiCounts[sample] = rois.length;
+  const i = allSamples.indexOf(sample) + 1;
+  const total = Object.values(roiCounts).reduce((a, b) => a + b, 0);
+  const done = allSamples.filter(s => (roiCounts[s] || 0) > 0).length;
+  $("prog").textContent = `image ${i} of ${allSamples.length} · ${rois.length} ROI(s) on this image · ${done}/${allSamples.length} images done · ${total} ROIs total`;
+}
+function qs(obj) { return Object.entries(obj).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join("&"); }
+
+// ---------- overview ----------
+const ov = $("ov"), ovx = ov.getContext("2d");
+function sizeCanvas(c) {
+  const r = c.parentElement.getBoundingClientRect();
+  c.width = r.width * devicePixelRatio; c.height = r.height * devicePixelRatio;
+  c.style.width = r.width + "px"; c.style.height = r.height + "px";
+}
+function drawOv() {
+  sizeCanvas(ov);
+  ovx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  ovx.fillStyle = "#0d0e11"; ovx.fillRect(0, 0, ov.width, ov.height);
+  if (!ovImg) return;
+  if (needFit) {
+    needFit = false;
+    const r = ov.getBoundingClientRect();
+    view.s = Math.min(r.width / ovImg.width, r.height / ovImg.height) * 0.98;
+    view.ox = (r.width - ovImg.width * view.s) / 2;
+    view.oy = (r.height - ovImg.height * view.s) / 2;
+  }
+  ovx.imageSmoothingEnabled = view.s < 1;
+  ovx.save(); ovx.translate(view.ox, view.oy); ovx.scale(view.s, view.s);
+  ovx.drawImage(ovImg, 0, 0);
+  ovx.restore();
+  // ROI rectangles
+  for (const r of rois) {
+    const p = i2c(r.x / OVDS, r.y / OVDS);
+    ovx.strokeStyle = "#41d97e"; ovx.lineWidth = 1.5;
+    ovx.strokeRect(p.x, p.y, r.w / OVDS * view.s, r.h / OVDS * view.s);
+    ovx.fillStyle = "#41d97e"; ovx.font = "11px sans-serif";
+    ovx.fillText("R" + r.id, p.x + 3, p.y + 12);
+  }
+  // select box (cyan, thick)
+  if (bigBox) {
+    const gs = +$("bigsize").value;
+    const g = i2c((bigBox.x - gs / 2) / OVDS, (bigBox.y - gs / 2) / OVDS);
+    ovx.strokeStyle = "#39d8ff"; ovx.lineWidth = mode === "select" ? 3 : 1.5;
+    ovx.strokeRect(g.x, g.y, gs / OVDS * view.s, gs / OVDS * view.s);
+  }
+  // inspect box (orange, small)
+  const bs = +$("boxsize").value;
+  const p = i2c((box.x - bs / 2) / OVDS, (box.y - bs / 2) / OVDS);
+  ovx.strokeStyle = "#ffab40"; ovx.lineWidth = mode === "inspect" ? 2 : 1;
+  ovx.strokeRect(p.x, p.y, bs / OVDS * view.s, bs / OVDS * view.s);
+  if (rub) {
+    ovx.strokeStyle = "#7fd7ff"; ovx.setLineDash([5, 4]);
+    ovx.strokeRect(Math.min(rub.x0,rub.x1), Math.min(rub.y0,rub.y1), Math.abs(rub.x1-rub.x0), Math.abs(rub.y1-rub.y0));
+    ovx.setLineDash([]);
+  }
+}
+function i2c(ix, iy) { return { x: ix * view.s + view.ox, y: iy * view.s + view.oy }; }
+function c2i(cx, cy) { return { x: (cx - view.ox) / view.s, y: (cy - view.oy) / view.s }; }
+
+let drag = null, rub = null;
+ov.addEventListener("mousedown", e => {
+  const r = ov.getBoundingClientRect(), cx = e.clientX - r.left, cy = e.clientY - r.top;
+  if (e.shiftKey) rub = { x0: cx, y0: cy, x1: cx, y1: cy };
+  else drag = { cx, cy, ox: view.ox, oy: view.oy, moved: false };
+});
+window.addEventListener("mousemove", e => {
+  const r = ov.getBoundingClientRect(), cx = e.clientX - r.left, cy = e.clientY - r.top;
+  if (rub) { rub.x1 = cx; rub.y1 = cy; drawOv(); }
+  else if (drag) {
+    if (Math.abs(cx - drag.cx) + Math.abs(cy - drag.cy) > 3) drag.moved = true;
+    view.ox = drag.ox + cx - drag.cx; view.oy = drag.oy + cy - drag.cy; drawOv();
+  }
+});
+window.addEventListener("mouseup", e => {
+  const r = ov.getBoundingClientRect(), cx = e.clientX - r.left, cy = e.clientY - r.top;
+  if (rub) {
+    const a = c2i(Math.min(rub.x0, rub.x1), Math.min(rub.y0, rub.y1));
+    const b = c2i(Math.max(rub.x0, rub.x1), Math.max(rub.y0, rub.y1));
+    const rr = { x: Math.round(a.x * OVDS), y: Math.round(a.y * OVDS),
+                 w: Math.round((b.x - a.x) * OVDS), h: Math.round((b.y - a.y) * OVDS) };
+    rub = null; drawOv();
+    if (rr.w > 60 && rr.h > 60) addRoi(rr);
+  } else if (drag) {
+    if (!drag.moved) {
+      const p = c2i(cx, cy);
+      const ix = Math.round(p.x * OVDS), iy = Math.round(p.y * OVDS);
+      if (mode === "select") { bigBox = { x: ix, y: iy }; }
+      else { box.x = ix; box.y = iy; }
+      drawOv(); fetchCrop(0);
+    }
+    drag = null;
+  }
+});
+ov.addEventListener("wheel", e => {
+  e.preventDefault();
+  const r = ov.getBoundingClientRect(), cx = e.clientX - r.left, cy = e.clientY - r.top;
+  const f = Math.exp(-e.deltaY * 0.0015), ns = Math.min(12, Math.max(0.05, view.s * f));
+  view.ox = cx - (cx - view.ox) * ns / view.s; view.oy = cy - (cy - view.oy) * ns / view.s;
+  view.s = ns; drawOv();
+}, { passive: false });
+window.addEventListener("keydown", e => {
+  const st = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (!st || e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  const a = activeBox();
+  const t = (mode === "select" && bigBox) ? bigBox : box;
+  t.x += st[0] * a.s / 2; t.y += st[1] * a.s / 2;
+  drawOv(); fetchCrop(150); e.preventDefault();
+});
+
+// ---------- detail ----------
+const detcv = $("detcv"), dcx = detcv.getContext("2d");
+function drawDet() {
+  sizeCanvas(detcv);
+  dcx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  const W = detcv.width / devicePixelRatio, H = detcv.height / devicePixelRatio;
+  dcx.fillStyle = "#0d0e11"; dcx.fillRect(0, 0, W, H);
+  const vmode = document.querySelector('input[name=view]:checked').value;
+  const imgs = (vmode === "split" ? [curImgs.orig, curImgs.overlay || curImgs.orig]
+                                  : [curImgs[vmode] || curImgs.orig]).filter(Boolean);
+  if (!imgs.length || !imgs[0]) return;
+  const n = imgs.length, iw = imgs[0].width, ih = imgs[0].height;
+  const sc = Math.min((W - 8 * (n - 1)) / (iw * n), H / ih);
+  const tw = iw * sc, th = ih * sc, y0 = (H - th) / 2;
+  const x0 = (W - (tw * n + 8 * (n - 1))) / 2;
+  dcx.imageSmoothingEnabled = sc < 1;
+  imgs.forEach((im, i) => dcx.drawImage(im, x0 + i * (tw + 8), y0, tw, th));
+  if (busyBig) {
+    dcx.fillStyle = "rgba(20,22,26,.75)";
+    dcx.fillRect(0, H / 2 - 22, W, 44);
+    dcx.fillStyle = "#ffd479"; dcx.font = "15px sans-serif"; dcx.textAlign = "center";
+    dcx.fillText("Extracting whole box (about 5-10 s)…", W / 2, H / 2 + 5);
+    dcx.textAlign = "start";
+  }
+}
+document.querySelectorAll('input[name=view]').forEach(r => r.addEventListener("change", drawDet));
+
+const MET_LABELS = {
+  area_mm2: "Area mm²", fg_pct: "Foreground %", skel_len_um: "Skeleton µm", skel_mm_per_mm2: "Skeleton mm/mm²",
+  n_junctions: "Junctions", n_tips: "Tips", n_comp: "Components", n_soma: "Somata",
+  junc_per_mm2: "Junctions/mm²", tips_per_mm2: "Tips/mm²", soma_per_mm2: "Somata/mm²",
+  junc_per_100um: "Junctions/100µm", mean_width_um: "Mean width µm",
+  n_round: "Round cells", round_per_mm2: "Round cells/mm²",
+  round_frac: "Round-cell fraction", skel_gap_frac: "Skeleton gap fraction",
+};
+function showMetrics(m) {
+  $("metrics").innerHTML = Object.entries(MET_LABELS)
+    .map(([k, lb]) => `<div><span>${lb}</span> <b>${m ? m[k] : "–"}</b></div>`).join("");
+}
+
+async function fetchCrop(delay = 250) {
+  clearTimeout(debTimer);
+  debTimer = setTimeout(async () => {
+    if (!sample) return;
+    if (fetchCtl) fetchCtl.abort();
+    fetchCtl = new AbortController();
+    const a = activeBox();
+    const q = qs({ sample, x: Math.round(a.cx - a.s / 2), y: Math.round(a.cy - a.s / 2),
+                   w: a.s, h: a.s, ...params() });
+    $("busy").style.display = "inline";
+    if (a.s >= 1024) {
+      // big box: show the instant original preview + banner first, swap in the full result when it arrives
+      busyBig = true;
+      fetch("/api/crop?quick=1&" + q, { signal: fetchCtl.signal })
+        .then(r => r.json())
+        .then(async j => { if (j.orig && busyBig) { curImgs = { orig: await loadImg(j.orig) }; drawDet(); } })
+        .catch(() => {});
+    }
+    try {
+      const r = await fetch("/api/crop?" + q, { signal: fetchCtl.signal });
+      const j = await r.json();
+      busyBig = false;
+      if (j.error) { $("status").textContent = "Error: " + j.error.slice(0, 120); return; }
+      const load = loadImg;
+      const [o, v, c] = await Promise.all([load(j.orig), load(j.overlay), load(j.comp)]);
+      curImgs = { orig: o, overlay: v, comp: c };
+      curMetrics = j.metrics;
+      showMetrics(j.metrics); drawDet();
+      const a2 = activeBox();
+      $("status").textContent = `${mode === "select" ? "select" : ""}(${a2.cx},${a2.cy}) ${j.ms}ms`;
+      $("busy").style.display = "none";
+    } catch (e) { if (e.name !== "AbortError") { $("status").textContent = "Request failed"; $("busy").style.display = "none"; } }
+  }, delay);
+}
+
+// ---------- parameter controls ----------
+for (const s of SLIDERS) {
+  const el = $(s);
+  el.addEventListener("input", () => {
+    el.parentElement.querySelector("output").textContent = el.value;
+    const dispOnly = ["disp_lo","disp_hi","gamma","mask_alpha"].includes(s);
+    fetchCrop(dispOnly ? 120 : 300);
+  });
+}
+$("fat_skel").addEventListener("change", () => fetchCrop(0));
+$("fill_holes").addEventListener("change", () => fetchCrop(0));
+$("sato_union").addEventListener("change", () => fetchCrop(0));
+$("drop_nosk").addEventListener("change", () => fetchCrop(0));
+for (const gid of ["enhance", "thr_mode"]) {
+  $(gid).querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    $(gid).querySelectorAll("button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on"); seg[gid] = b.dataset.v; fetchCrop(0);
+  }));
+}
+$("boxsize").addEventListener("change", () => { drawOv(); fetchCrop(0); });
+
+// ---------- ROI ----------
+async function addRoi(rr) {
+  const res = await fetch("/api/rois", { method: "POST",
+    body: JSON.stringify({ sample, ...rr }) });
+  rois = await res.json(); renderRois(); drawOv();
+}
+$("saveroi").addEventListener("click", () => {
+  const a = activeBox();
+  addRoi({ x: Math.round(a.cx - a.s / 2), y: Math.round(a.cy - a.s / 2), w: a.s, h: a.s });
+});
+$("modebtn").addEventListener("click", () => {
+  mode = mode === "inspect" ? "select" : "inspect";
+  $("modebtn").classList.toggle("mode-on", mode === "select");
+  $("modebtn").textContent = mode === "select" ? "◼ Selecting" : "◻ Select mode";
+  if (mode === "select" && !bigBox) bigBox = { x: box.x, y: box.y };
+  drawOv(); fetchCrop(0);
+});
+$("advbtn").addEventListener("click", () => document.body.classList.toggle("simple"));
+$("clean_bg").addEventListener("change", () => fetchCrop(0));
+$("uni_disp").addEventListener("change", () => fetchCrop(0));
+$("use_clean").addEventListener("change", () => loadSample(sample));
+$("dot_filter").addEventListener("change", () => fetchCrop(0));
+$("web_filter").addEventListener("change", () => fetchCrop(0));
+// MUST match server.py DEFAULTS (search for `DEFAULTS = dict(`). If you change one, change both.
+// `loop_break` lives in server DEFAULTS only - it has no UI control, so it is absent here.
+const SLIDER_DEFAULTS = { uni_hi: 25, clean_floor: 2, disp_lo: 1, disp_hi: 99.7, gamma: 1, mask_alpha: 0.35,
+  bg_um: 8, smooth_um: 0.6, sato_um: 0.6, gate_z: 2, z_thr: 3.5, z_lo: 2, local_win_um: 40,
+  otsu_k: 0.7, pct: 99, close_px: 2, min_area_um2: 6, min_skel_um: 5, min_skel_free_um: 15,
+  soma_r_um: 2.4, spur_k: 1.2, spur_min_um: 4, junc_merge_um: 3, soma_merge_um: 6, focus_thr: 0, round_bright_z: 50 };
+$("resetbtn").addEventListener("click", () => {
+  for (const [k, v] of Object.entries(SLIDER_DEFAULTS)) {
+    $(k).value = v; $(k).parentElement.querySelector("output").textContent = v;
+  }
+  for (const [k, v] of [["fat_skel",1],["fill_holes",1],["sato_union",1],["drop_nosk",1],
+                        ["clean_bg",1],["uni_disp",0],["use_clean",1],["dot_filter",1],["web_filter",1]]) $(k).checked = !!v;
+  for (const [gid, val] of [["enhance","sato"],["thr_mode","zlocal"]]) {
+    seg[gid] = val;
+    $(gid).querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === val));
+  }
+  fetchCrop(0);
+});
+$("bigsize").addEventListener("change", () => { drawOv(); if (mode === "select") fetchCrop(0); });
+async function delRoi(id) {
+  const res = await fetch("/api/rois", { method: "POST",
+    body: JSON.stringify({ sample, delete: id }) });
+  rois = await res.json(); delete roiMetrics[id]; renderRois(); drawOv();
+}
+function renderRois() {
+  $("roin").textContent = rois.length;
+  updateProg();
+  $("roitable").querySelector("tbody").innerHTML = rois.map(r => {
+    const m = roiMetrics[r.id];
+    return `<tr data-id="${r.id}"><td>R${r.id}</td>
+      <td>${m ? m.area_mm2.toFixed(3) : (r.w * r.h * (PIX / 1e3) ** 2).toFixed(3)}</td>
+      <td>${m ? m.skel_mm_per_mm2 : "–"}</td><td>${m ? m.junc_per_mm2 : "–"}</td>
+      <td>${m ? m.soma_per_mm2 : "–"}</td>
+      <td><a class="del" data-id="${r.id}">✕</a></td></tr>`;
+  }).join("");
+  $("roitable").querySelectorAll("tr[data-id]").forEach(tr => tr.addEventListener("click", e => {
+    if (e.target.classList.contains("del")) { delRoi(+e.target.dataset.id); e.stopPropagation(); return; }
+    const r = rois.find(x => x.id === +tr.dataset.id);
+    box.x = r.x + r.w / 2; box.y = r.y + r.h / 2; drawOv(); fetchCrop(0);
+  }));
+}
+$("recalc").addEventListener("click", async () => {
+  for (const r of rois) {
+    $("status").textContent = `Recomputing R${r.id}…`;
+    const res = await fetch(`/api/roi_metrics?${qs({ sample, id: r.id, ...params() })}`);
+    roiMetrics[r.id] = await res.json();
+    renderRois();
+  }
+  $("status").textContent = "All ROIs recomputed with the current parameters";
+});
+$("export").addEventListener("click", () => {
+  $("status").textContent = "Exporting all ROIs of all samples, this can take several minutes…";
+  window.open("/api/export.csv?" + qs(params()), "_blank");
+});
+
+// ---------- loading ----------
+async function loadSample(s) {
+  sample = s;
+  bigBox = null;
+  ovImg = null; drawOv();
+  const im = new Image();
+  im.onload = () => { ovImg = im; needFit = true; drawOv(); };
+  im.src = `/api/overview?${qs({ sample: s, ch, use_clean: $("use_clean").checked ? 1 : 0 })}`;
+  rois = await (await fetch(`/api/rois?sample=${encodeURIComponent(s)}`)).json();
+  roiMetrics = {}; renderRois();
+  fetchCrop(0);
+}
+$("sample").addEventListener("change", e => loadSample(e.target.value));
+$("ch").addEventListener("change", e => { ch = e.target.value; loadSample(sample); });
+window.addEventListener("resize", () => { drawOv(); drawDet(); });
+
+(async () => {
+  document.body.classList.add("simple");   // simple mode by default (⚙ expands the advanced params)
+  const j = await (await fetch("/api/samples")).json();
+  PIX = j.pix_um;
+  allSamples = j.samples; roiCounts = j.roi_counts || {};
+  $("sample").innerHTML = j.samples.map(s => `<option>${s}</option>`).join("");
+  showMetrics(null);
+  if (j.samples.length) loadSample(j.samples[0]);
+})();
+</script>
+</body>
+</html>
