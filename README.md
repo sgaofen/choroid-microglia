@@ -51,6 +51,16 @@ pieces.
 ![Local skeleton comparison](docs/figures/03_local_skeleton_comparison.png)
 ![Branch / endpoint verification](docs/figures/04_branch_endpoint_verification.png)
 
+The 2026-08 pipeline draws the same audit, per ROI. Left is the background-subtracted input, right
+is the same field with the extraction on top — blue mask, red skeleton, yellow soma outline, cyan
+endpoints, magenta circle on a cell classified as round. All 74 ROIs were reviewed this way.
+
+![ROI overlay](docs/figures/06_extraction_overlay.png)
+
+At native resolution, one image pixel per skeleton pixel, no upsampling:
+
+![Extraction detail](docs/figures/07_extraction_zoom.png)
+
 ### 4. It reports many metrics at once — and is honest about which to trust
 25 metrics across abundance, size, branching, fragmentation, connectivity,
 heterogeneity, morphotype composition, and spatial focality. Clean
@@ -166,11 +176,25 @@ live at the top of `pipeline.py`.
 
 ## Project B — `project_B_stabilization/`
 
-Port / revive the **Shipley et al. 2020** (Neuron; PMID 32961128) MATLAB pipeline
-that motion-stabilizes *in vivo* z-stacks of choroid plexus (the tissue floats
-freely in CSF, so slices are misaligned by large displacements and standard
-motion correction fails). See `project_B_stabilization/HANDOFF.md` for the code
-map and plan. Original code: [LehtinenLab/Shipley2020](https://github.com/LehtinenLab/Shipley2020).
+Python port of the **Shipley et al. 2020** (Neuron; PMID 32961128) MATLAB
+pipeline that motion-stabilizes *in vivo* z-stacks of choroid plexus (the tissue
+floats freely in CSF, so slices are misaligned by large displacements and
+standard motion correction fails). Original code:
+[LehtinenLab/Shipley2020](https://github.com/LehtinenLab/Shipley2020).
+
+**Done** — `project_B_stabilization/pyport/` ships two versions:
+
+- **replicate** — the original algorithm, reproducing the reference output bit
+  for bit, minus the MATLAB / Java / Fiji dependencies and the manual export
+  step.
+- **improved** — four corrections on top: larger usable field (black border
+  9.5% -> 3.4%), sharper frames, less residual drift (0.28 -> 0.19 px), plus an
+  elastic pass for the frames distorted during animal motion.
+
+A 55-minute run (65 GB) now processes in **2.2 minutes** on a laptop, against
+an estimated 1-6 hours for the original setup. See
+`project_B_stabilization/pyport/README.md`; `CODEMAP.md` / `HANDOFF.md` hold
+the reverse-engineering notes.
 
 ## Data
 
