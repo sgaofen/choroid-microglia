@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+tests/scratch_*
+tests/out/
+*.ome.tif
+*.npz

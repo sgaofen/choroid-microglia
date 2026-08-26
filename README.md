@@ -191,8 +191,9 @@ standard motion correction fails). Original code:
   9.5% -> 3.4%), sharper frames, less residual drift (0.28 -> 0.19 px), plus an
   elastic pass for the frames distorted during animal motion.
 
-A 55-minute run (65 GB) now processes in **2.2 minutes** on a laptop, against
-an estimated 1-6 hours for the original setup. See
+A 55-minute run (65 GB) now processes in **about 3 minutes** on a laptop
+(0.9 min one-off relayout + 2.2 min compute), against an estimated 1-6 hours
+for the original setup. See
 `project_B_stabilization/pyport/README.md`; `CODEMAP.md` / `HANDOFF.md` hold
 the reverse-engineering notes.
 
